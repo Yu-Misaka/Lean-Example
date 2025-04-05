@@ -696,6 +696,8 @@ theorem integralz : IsIntegral ℤ γ := ⟨polyz hd, ⟨polyz_Monic hd, eval_ze
 
 local notation3 "zbase" => Algebra.adjoin.powerBasis' (integralz hd)
 
+theorem free_mod : Module.Free ℤ (Algebra.adjoin ℤ {γ}) := ⟨⟨Fin (dim zbase), basis zbase⟩⟩
+
 private theorem min_polyz_natDegree_le : (minpoly ℤ γ).natDegree ≤ 2 := by
   rw [← polyz_natDegree hd]
   exact natDegree_le_of_dvd
@@ -817,8 +819,6 @@ private theorem adjoin_of_ring_of_int (x : ℚ⟮√-d⟯) : x.1 ∈ Algebra.adj
   refine add_mem isIntegral_algebraMap (mul_mem isIntegral_algebraMap ?_)
   rw [mem_integralClosure_iff, ← isIntegral_algebraMap_iff (@algMap_inj d)]
   exact (integralz hd)
-
-instance free_mod : Module.Free ℤ (Algebra.adjoin ℤ {γ}) := ⟨⟨Fin (dim zbase), basis zbase⟩⟩
 
 private theorem traceForm_11 :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {γ}) 1 1 = 2 := by
