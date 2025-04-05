@@ -2,50 +2,35 @@ import Mathlib
 
 open IntermediateField Polynomial PowerBasis NumberField
 
-namespace finChange
-
-variable {l : ℕ} {n : ℕ} (hl : l = n)
-
-include hl in
-def equi : Fin n ≃ Fin l := finCongr hl.symm
-
-private theorem bi : Function.Bijective (equi hl).invFun :=
-  Function.bijective_iff_has_inverse.2 ⟨(equi hl).toFun,
-    ⟨(equi hl).right_inv, (equi hl).left_inv⟩⟩
-
-theorem change {T : Type*} {f : Fin l → T} [AddCommMonoid T] :
-  ∑ i : Fin l, f i = ∑ i : Fin n, f ((equi hl).toFun i) :=
-    Function.Bijective.finset_sum (equi hl).invFun (bi hl) f
-      (fun x ↦ f ((equi hl).toFun x)) (fun _ ↦ rfl)
-
-end finChange
-
 section quadratic
 
+theorem finChange {l n : ℕ} (hl : l = n) {T : Type*} {f : Fin l → T} [AddCommMonoid T] :
+  ∑ i : Fin l, f i = ∑ i : Fin n, f ((finCongr hl.symm).toFun i) :=
+    (Fin.sum_congr' f hl.symm).symm
+
 variable {R S : Type*} [CommRing R] [Ring S] [Algebra R S]
-variable {base : PowerBasis R S} (hdim : dim base = 2)
+variable {base : PowerBasis R S} (hdim : 2 = dim base)
 
 include hdim
 
-private theorem base_equiv_zero : (basis base) (finChange.equi hdim 0) = 1 := by
-  have : (finChange.equi hdim 0) = ⟨0, by rw [hdim]; omega⟩ := rfl
+private theorem base_equiv_zero : (basis base) (finCongr hdim 0) = 1 := by
+  have : (finCongr hdim 0) = ⟨0, by rw [← hdim]; omega⟩ := rfl
   rw [this, basis_eq_pow base _]
   simp only [adjoin.powerBasis_gen, pow_zero]
 
 include base
 
-noncomputable abbrev adj := (basis base) (finChange.equi hdim 1)
+noncomputable abbrev adj := (basis base) (finCongr hdim 1)
 
 theorem quadratic.repr (α : S) :
     ∃ r s : R, α = (algebraMap R S) r + s • (adj hdim) := by
   have := Basis.sum_repr (basis base) α
-  rw [finChange.change hdim, Fin.sum_univ_two] at this
   have foo : ∀ r : R, r • (1 : S) = (algebraMap R S) r := fun r ↦
     (Algebra.algebraMap_eq_smul_one r).symm
-  rw [show (finChange.equi hdim).toFun = finChange.equi hdim by rfl,
-    base_equiv_zero hdim, foo] at this
-  exact ⟨((basis base).repr α) (finChange.equi hdim 0),
-    ((basis base).repr α) (finChange.equi hdim 1), this.symm⟩
+  rw [finChange hdim.symm, Fin.sum_univ_two,
+    show (finCongr hdim).toFun = finCongr hdim by rfl, base_equiv_zero hdim, foo] at this
+  exact ⟨((basis base).repr α) (finCongr hdim 0),
+    ((basis base).repr α) (finCongr hdim 1), this.symm⟩
 
 end quadratic
 
@@ -58,9 +43,9 @@ local notation: max "minpo(" a"," b"," c ")" =>
 
 theorem minpoly_break {a b c : ℚ} : Polynomial.map (algebraMap ℚ ℂ) minpo(a, b, c) =
     (X - C ((a + b * √-d) / c)) * (X - C ((a - b * √-d) / c)) := by
-  simp only [Polynomial.map_add, Polynomial.map_sub, Polynomial.map_pow, map_X, Polynomial.map_mul,
-    map_C, map_div₀, eq_ratCast, Rat.cast_mul, Rat.cast_ofNat, Rat.cast_sub, Rat.cast_pow,
-    Rat.cast_intCast, one_div]
+  simp only [Polynomial.map_add, Polynomial.map_sub, Polynomial.map_pow, map_X,
+    Polynomial.map_mul, map_C, map_div₀, eq_ratCast, Rat.cast_mul, Rat.cast_ofNat,
+    Rat.cast_sub, Rat.cast_pow, Rat.cast_intCast, one_div]
   rw [sub_mul, mul_sub, mul_sub, ← C_mul, mul_comm X (C _), sub_sub,
     ← add_sub_assoc, ← add_mul, ← C_add, ← sq, div_add_div_same]
   conv =>
@@ -143,14 +128,14 @@ private theorem poly_min : minpoly ℚ (√-d) = poly := by
   simp only [one_div, map_intCast, map_sub, map_pow, aeval_X, Complex.cpow_ofNat_inv_pow,
     sub_self]
 
-private theorem base_dim : dim base = 2 :=
+private theorem base_dim : 2 = dim base :=
   have : Module.finrank ℚ ℚ⟮√-d⟯ = 2 :=
     poly_natDegree ▸ poly_min sqf one ▸ adjoin.finrank integral
-  (this ▸ finrank base).symm
+  this ▸ finrank base
 
 private theorem base_equiv_one : adj (base_dim sqf one) = δ := by
-  have : (finChange.equi (base_dim sqf one) 1) =
-    ⟨1, by rw [(base_dim sqf one)]; omega⟩ := rfl
+  have : (finCongr (base_dim sqf one) 1) =
+    ⟨1, by rw [← base_dim sqf one]; omega⟩ := rfl
   rw [adj, this, basis_eq_pow base _]
   simp only [adjoin.powerBasis_gen, pow_one]
 
@@ -401,8 +386,8 @@ theorem adjoin_mem₃ {x : ℚ⟮√-d⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮√
   apply_fun (aeval (x : ℂ) · ) at hmin
   simp only [aeval_map_algebraMap, Subalgebra.aeval_coe, minpoly.aeval, ZeroMemClass.coe_zero,
     Rat.cast_intCast, one_div, hone, Nat.cast_one, Rat.cast_one, div_one, map_add, map_intCast,
-    map_mul, map_sub, coe_aeval_eq_eval, eval_mul, eval_sub, eval_X, eval_add, eval_intCast, eval_C,
-    zero_eq_mul] at hmin
+    map_mul, map_sub, coe_aeval_eq_eval, eval_mul, eval_sub, eval_X, eval_add, eval_intCast,
+    eval_C, zero_eq_mul] at hmin
   rcases hmin with hx₁ | hx₁ <;> rw [sub_eq_zero.1 hx₁]
   · refine add_mem adjoin_mem₀ <| mul_mem adjoin_mem₀ ?_
     simpa only [one_div] using Algebra.self_mem_adjoin_singleton ℤ √-d
@@ -459,12 +444,12 @@ private theorem min_polyz_natDegree : (minpoly ℤ √-d).natDegree = 2 := by
   rw [← hx] at this
   exact this <| RingHom.mem_range_self (algebraMap ℚ ℂ) x
 
-private theorem base_dim : dim zbase = 2 := by
+private theorem base_dim : 2 = dim zbase := by
   rw [Algebra.adjoin.powerBasis'_dim, min_polyz_natDegree sqf one]
 
 private theorem base_equiv_one : adj (base_dim sqf one) = δ := by
-  have : (finChange.equi (base_dim sqf one) 1) =
-    ⟨1, by rw [(base_dim sqf one)]; omega⟩ := rfl
+  have : (finCongr (base_dim sqf one) 1) =
+    ⟨1, by rw [← base_dim sqf one]; omega⟩ := rfl
   rw [adj, this, basis_eq_pow zbase _]
   simp only [adjoin.powerBasis_gen, pow_one]
   exact Algebra.adjoin.powerBasis'_gen integralz
@@ -501,20 +486,20 @@ private theorem traceForm_11 :
   rw [Algebra.traceForm_apply, one_mul,
     ← @algebraMap.coe_one ℤ (Algebra.adjoin ℤ {√-d}) ..,
     Algebra.trace_algebraMap, finrank zbase,
-    base_dim sqf one, nsmul_eq_mul, Nat.cast_ofNat, mul_one]
+    ← base_dim sqf one, nsmul_eq_mul, Nat.cast_ofNat, mul_one]
 
 private theorem traceForm_1δ :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {√-d}) 1 δ = 0 := by
   rw [Algebra.traceForm_apply, one_mul, Algebra.trace_eq_matrix_trace (basis zbase)
-    δ, Matrix.trace, finChange.change (base_dim sqf one)]
+    δ, Matrix.trace, finChange (base_dim sqf one).symm]
   simp only [Equiv.toFun_as_coe, Matrix.diag_apply, Fin.sum_univ_two, Fin.isValue]
   rw [Algebra.leftMulMatrix_eq_repr_mul, Algebra.leftMulMatrix_eq_repr_mul,
     base_equiv_zero (base_dim sqf one), mul_one]
-  have neq : (finChange.equi (base_dim sqf one)) 0 ≠
-    (finChange.equi (base_dim sqf one)) 1 := ne_of_beq_false rfl
+  have neq : finCongr (base_dim sqf one) 0 ≠
+    finCongr (base_dim sqf one) 1 := ne_of_beq_false rfl
   have := Basis.repr_self_apply (basis zbase)
-    ((finChange.equi (base_dim sqf one)) 1)
-    ((finChange.equi (base_dim sqf one)) 0)
+    (finCongr (base_dim sqf one) 1)
+    (finCongr (base_dim sqf one) 0)
   rw [ite_cond_eq_false _ _ (eq_false neq.symm)] at this
   rw [← base_equiv_one sqf one, adj, this, zero_add, ← adj, base_equiv_one sqf one,
     ← sq, sqd_sq]
@@ -522,8 +507,8 @@ private theorem traceForm_1δ :
     ((algebraMap ℤ (Algebra.adjoin ℤ {√-d})) d) * 1 := by
       rw [algebraMap_int_eq, eq_intCast, mul_one]
   replace this := Basis.repr_self_apply (basis zbase)
-    ((finChange.equi (base_dim sqf one)) 0)
-    ((finChange.equi (base_dim sqf one)) 1)
+    (finCongr (base_dim sqf one) 0)
+    (finCongr (base_dim sqf one) 1)
   rw [ite_cond_eq_false _ _ (eq_false neq)] at this
   rw [cast, Basis.repr_smul', ← base_equiv_zero (base_dim sqf one), this, mul_zero]
 
@@ -534,14 +519,14 @@ private theorem traceForm_δ1 :
 private theorem traceForm_δδ :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {√-d}) δ δ = 2 * d := by
   rw [Algebra.traceForm_apply, ← sq, sqd_sq, Algebra.trace_eq_matrix_trace (basis zbase)
-    d, Matrix.trace, finChange.change (base_dim sqf one)]
+    d, Matrix.trace, finChange (base_dim sqf one).symm]
   simp only [Equiv.toFun_as_coe, Matrix.diag_apply, Fin.sum_univ_two, Fin.isValue]
   rw [Algebra.leftMulMatrix_eq_repr_mul, Algebra.leftMulMatrix_eq_repr_mul,
     base_equiv_zero (base_dim sqf one), mul_one]
   have := Basis.repr_self_apply (basis zbase)
-    ((finChange.equi (base_dim sqf one)) 0)
-    ((finChange.equi (base_dim sqf one)) 0)
-  rw [ite_cond_eq_true _ _ (eq_self ((finChange.equi (base_dim sqf one)) 0))] at this
+    (finCongr (base_dim sqf one) 0)
+    (finCongr (base_dim sqf one) 0)
+  rw [ite_cond_eq_true _ _ (eq_self (finCongr (base_dim sqf one) 0))] at this
   have cast : @Int.cast (Algebra.adjoin ℤ {√-d}) AddGroupWithOne.toIntCast d =
     ((algebraMap ℤ (Algebra.adjoin ℤ {√-d})) d) * 1 := by
       rw [algebraMap_int_eq, eq_intCast, mul_one]
@@ -551,15 +536,15 @@ private theorem traceForm_δδ :
     ((algebraMap ℤ (Algebra.adjoin ℤ {√-d})) d) := by
       rw [algebraMap_int_eq, eq_intCast]
   replace this := Basis.repr_self_apply (basis zbase)
-    ((finChange.equi (base_dim sqf one)) 1)
-    ((finChange.equi (base_dim sqf one)) 1)
-  rw [ite_cond_eq_true _ _ (eq_self ((finChange.equi (base_dim sqf one)) 1))] at this
+    (finCongr (base_dim sqf one) 1)
+    (finCongr (base_dim sqf one) 1)
+  rw [ite_cond_eq_true _ _ (eq_self (finCongr (base_dim sqf one) 1))] at this
   rw [cast, Basis.repr_smul', this, mul_one, Int.two_mul d]
 
 private def traceMat : Matrix (Fin 2) (Fin 2) ℤ := !![2, 0; 0, 2 * d]
 
 private theorem mat_conv :
-  (Matrix.reindexAlgEquiv ℤ ℤ (finChange.equi (base_dim sqf one)).symm)
+  (Matrix.reindexAlgEquiv ℤ ℤ (finCongr (base_dim sqf one)).symm)
     (Algebra.traceMatrix ℤ (basis zbase)) = @traceMat d := Matrix.ext fun i j ↦ by
   fin_cases i <;> fin_cases j
   all_goals simp only [Fin.zero_eta, Fin.isValue, Fin.mk_one,
@@ -576,7 +561,7 @@ private theorem mat_conv :
     exact traceForm_δδ sqf one
 
 private theorem discr_z : Algebra.discr ℤ (basis zbase) = 4 * d := by
-  have := Matrix.det_reindexAlgEquiv ℤ ℤ (finChange.equi (base_dim sqf one)).symm
+  have := Matrix.det_reindexAlgEquiv ℤ ℤ (finCongr (base_dim sqf one)).symm
     (Algebra.traceMatrix ℤ (basis zbase))
   rw [Algebra.discr_def, ← this, mat_conv sqf one, traceMat, Matrix.det_fin_two_of,
     mul_zero, sub_zero, ← mul_assoc]; rfl
@@ -687,7 +672,8 @@ private theorem adjoin_mem₅ {a b : ℤ} (hodd : Odd a ∧ Odd b) :
     simp only [Int.cast_add, Int.cast_mul, Int.cast_ofNat, Int.cast_one, AdjoinSimple.coe_gen,
       add_div]
     rw [← mul_div, mul_div_cancel₀ _ (NeZero.ne' 2).symm, add_mul, add_div, one_mul,
-      mul_assoc, ← mul_div, mul_div_cancel₀ _ (NeZero.ne' 2).symm, ← add_assoc, add_comm, ← add_assoc, ← add_assoc, add_comm _ (1 / 2), ← add_assoc, ← add_div]
+      mul_assoc, ← mul_div, mul_div_cancel₀ _ (NeZero.ne' 2).symm, ← add_assoc, add_comm,
+      ← add_assoc, ← add_assoc, add_comm _ (1 / 2), ← add_assoc, ← add_div]
   exact add_mem (add_mem (Algebra.self_mem_adjoin_singleton ℤ _) adjoin_mem₀)
     <| mul_mem adjoin_mem₀ adjoin_mem₄
 
@@ -726,7 +712,8 @@ private theorem break_sq :
   rw [div_mul_cancel₀ _ (OfNat.zero_ne_ofNat 4).symm, add_mul]
   norm_cast
   rw [mul_comm (k hd) _, hk hd, show (4 : ℂ) = (2 : ℂ) * 2 by norm_cast, ← mul_assoc,
-    div_mul_cancel₀ _ (NeZero.ne' 2).symm, add_mul, one_mul, sq, add_mul, one_mul, mul_add, mul_one, ← sq]
+    div_mul_cancel₀ _ (NeZero.ne' 2).symm, add_mul, one_mul, sq, add_mul, one_mul, mul_add,
+    mul_one, ← sq]
   simp only [one_div, Complex.cpow_ofNat_inv_pow, Int.cast_sub, Int.cast_one]; group
 
 private theorem break_trip : (@δ d) * (@δ d) * (@δ d) = (k hd) + (1 + (k hd)) * (@δ d) := by
@@ -758,8 +745,8 @@ private theorem polyz_irr : Irreducible (polyz hd) := by
   · refine Multiset.eq_zero_iff_forall_not_mem.2 (fun a ↦ ?_)
     by_contra!
     simp only [algebraMap_int_eq, Polynomial.map_sub, eq_intCast, Int.cast_one, one_mul,
-      Polynomial.map_pow, map_X, Polynomial.map_intCast, mem_roots', ne_eq, IsRoot.def, eval_sub,
-      eval_pow, eval_X, eval_intCast] at this
+      Polynomial.map_pow, map_X, Polynomial.map_intCast, mem_roots', ne_eq, IsRoot.def,
+      eval_sub, eval_pow, eval_X, eval_intCast] at this
     exact (rat_sq_sub_ne_zero sqf one hd a) this.2
 
 private theorem min_polyz_natDegree : (minpoly ℤ γ).natDegree = 2 := by
@@ -776,12 +763,12 @@ private theorem min_polyz_natDegree : (minpoly ℤ γ).natDegree = 2 := by
     norm_cast; norm_cast at hx
   exact Q.rat_sq_sub_ne_zero sqf one (-1 + (x : ℚ) * 2) hx
 
-private theorem base_dim : dim zbase = 2 := by
+private theorem base_dim : 2 = dim zbase := by
   rwa [Algebra.adjoin.powerBasis'_dim, min_polyz_natDegree sqf one]
 
 private theorem base_equiv_one : adj (base_dim sqf one hd) = δ := by
-  have : (finChange.equi (base_dim sqf one hd) 1) =
-    ⟨1, by rw [(base_dim sqf one hd)]; omega⟩ := rfl
+  have : finCongr (base_dim sqf one hd) 1 =
+    ⟨1, by rw [← base_dim sqf one hd]; omega⟩ := rfl
   rw [adj, this, basis_eq_pow zbase _]
   simp only [adjoin.powerBasis_gen, pow_one]
   exact Algebra.adjoin.powerBasis'_gen <| integralz hd
@@ -824,47 +811,47 @@ private theorem traceForm_11 :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {γ}) 1 1 = 2 := by
   rwa [Algebra.traceForm_apply, one_mul, ← @algebraMap.coe_one ℤ (Algebra.adjoin ℤ {γ}) ..,
     @Algebra.trace_algebraMap ℤ (Algebra.adjoin ℤ {γ}) _ _ _ _ (free_mod hd) 1,
-    finrank zbase, base_dim sqf one, nsmul_eq_mul, Nat.cast_ofNat, mul_one]
+    finrank zbase, ← base_dim sqf one, nsmul_eq_mul, Nat.cast_ofNat, mul_one]
 
 private theorem aux_traceForm_1δ :
-    ((basis zbase).repr (k hd)) ((finChange.equi (base_dim sqf one hd)) 1) = 0 := by
+    ((basis zbase).repr (k hd)) (finCongr (base_dim sqf one hd) 1) = 0 := by
   have cast : @Int.cast (Algebra.adjoin ℤ {γ}) AddGroupWithOne.toIntCast (k hd) =
     ((algebraMap ℤ (Algebra.adjoin ℤ {γ})) (k hd)) * 1 := by
       rw [algebraMap_int_eq, eq_intCast, mul_one]
-  have neq : (finChange.equi (base_dim sqf one hd)) 0 ≠
-    (finChange.equi (base_dim sqf one hd)) 1 := ne_of_beq_false rfl
+  have neq : finCongr (base_dim sqf one hd) 0 ≠
+    finCongr (base_dim sqf one hd) 1 := ne_of_beq_false rfl
   replace this := Basis.repr_self_apply (basis zbase)
-    ((finChange.equi (base_dim sqf one hd)) 0)
-    ((finChange.equi (base_dim sqf one hd)) 1)
+    (finCongr (base_dim sqf one hd) 0)
+    (finCongr (base_dim sqf one hd) 1)
   rw [ite_cond_eq_false _ _ (eq_false neq)] at this
   rw [cast, Basis.repr_smul', ← base_equiv_zero (base_dim sqf one hd), this, mul_zero]
 
 private theorem aux_traceForm_1δ' :
-    ((basis zbase).repr (δ * δ)) ((finChange.equi (base_dim sqf one hd)) 1) = 1 := by
+    ((basis zbase).repr (δ * δ)) (finCongr (base_dim sqf one hd) 1) = 1 := by
   rw [← sq, break_sq hd]
   simp only [mul_one, one_mul, map_add, Fin.isValue, Finsupp.coe_add, Pi.add_apply]
-  have neq : (finChange.equi (base_dim sqf one hd)) 0 ≠
-    (finChange.equi (base_dim sqf one hd)) 1 := ne_of_beq_false rfl
+  have neq : finCongr (base_dim sqf one hd) 0 ≠
+    finCongr (base_dim sqf one hd) 1 := ne_of_beq_false rfl
   replace this := Basis.repr_self_apply (basis zbase)
-    ((finChange.equi (base_dim sqf one hd)) 1)
-    ((finChange.equi (base_dim sqf one hd)) 1)
-  rw [ite_cond_eq_true _ _ (eq_self ((finChange.equi (base_dim sqf one hd)) 1))] at this
+    (finCongr (base_dim sqf one hd) 1)
+    (finCongr (base_dim sqf one hd) 1)
+  rw [ite_cond_eq_true _ _ (eq_self (finCongr (base_dim sqf one hd) 1))] at this
   rw [← base_equiv_one sqf one hd, adj, this, aux_traceForm_1δ sqf one hd, zero_add]
 
 private theorem aux_traceForm_1δ'' :
-    ((basis zbase).repr δ) ((finChange.equi (base_dim sqf one hd)) 0) = 0 := by
-  have neq : (finChange.equi (base_dim sqf one hd)) 0 ≠
-      (finChange.equi (base_dim sqf one hd)) 1 := ne_of_beq_false rfl
+    ((basis zbase).repr δ) (finCongr (base_dim sqf one hd) 0) = 0 := by
+  have neq : finCongr (base_dim sqf one hd) 0 ≠
+      finCongr (base_dim sqf one hd) 1 := ne_of_beq_false rfl
   have := Basis.repr_self_apply (basis zbase)
-    ((finChange.equi (base_dim sqf one hd)) 1)
-    ((finChange.equi (base_dim sqf one hd)) 0)
+    (finCongr (base_dim sqf one hd) 1)
+    (finCongr (base_dim sqf one hd) 0)
   rw [ite_cond_eq_false _ _ (eq_false neq.symm)] at this
   rw [← base_equiv_one sqf one hd, adj, this]
 
 private theorem traceForm_1δ :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {γ}) 1 δ = 1 := by
   rw [Algebra.traceForm_apply, one_mul, Algebra.trace_eq_matrix_trace (basis zbase)
-    δ, Matrix.trace, finChange.change (base_dim sqf one hd)]
+    δ, Matrix.trace, finChange (base_dim sqf one hd).symm]
   simp only [Equiv.toFun_as_coe, Matrix.diag_apply, Fin.sum_univ_two, Fin.isValue]
   rw [Algebra.leftMulMatrix_eq_repr_mul, Algebra.leftMulMatrix_eq_repr_mul,
     base_equiv_zero (base_dim sqf one hd), mul_one]
@@ -875,42 +862,44 @@ private theorem traceForm_δ1 :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {γ}) δ 1 = 1 := by
   simpa only [Algebra.traceForm_apply, mul_one, one_mul] using traceForm_1δ sqf one hd
 
-private theorem aux_traceForm_δδ : ((basis zbase).repr (δ * δ)) ((finChange.equi (base_dim sqf one hd)) 0) = (k hd) := by
+private theorem aux_traceForm_δδ :
+    ((basis zbase).repr (δ * δ)) (finCongr (base_dim sqf one hd) 0) = (k hd) := by
   rw [← sq, break_sq hd]
   simp only [mul_one, one_mul, map_add, Fin.isValue, Finsupp.coe_add, Pi.add_apply]
   have cast : @Int.cast (Algebra.adjoin ℤ {γ}) AddGroupWithOne.toIntCast (k hd) =
     ((algebraMap ℤ (Algebra.adjoin ℤ {γ})) (k hd)) * 1 := by
       rw [algebraMap_int_eq, eq_intCast, mul_one]
   replace this := Basis.repr_self_apply (basis zbase)
-    ((finChange.equi (base_dim sqf one hd)) 0)
-    ((finChange.equi (base_dim sqf one hd)) 0)
-  rw [ite_cond_eq_true _ _ (eq_self ((finChange.equi (base_dim sqf one hd)) 0))] at this
+    (finCongr (base_dim sqf one hd) 0)
+    (finCongr (base_dim sqf one hd) 0)
+  rw [ite_cond_eq_true _ _ (eq_self (finCongr (base_dim sqf one hd) 0))] at this
   rw [aux_traceForm_1δ'' sqf one hd, cast, Basis.repr_smul',
     ← base_equiv_zero (base_dim sqf one hd), this, mul_one, add_zero]
 
 private theorem traceForm_δδ :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {γ}) δ δ = 1 + 2 * (k hd) := by
   rw [Algebra.traceForm_apply, Algebra.trace_eq_matrix_trace (basis zbase)
-    _, Matrix.trace, finChange.change (base_dim sqf one hd)]
+    _, Matrix.trace, finChange (base_dim sqf one hd).symm]
   simp only [Equiv.toFun_as_coe, Matrix.diag_apply, Fin.sum_univ_two, Fin.isValue]
   rw [Algebra.leftMulMatrix_eq_repr_mul, Algebra.leftMulMatrix_eq_repr_mul,
     base_equiv_zero (base_dim sqf one hd), mul_one, aux_traceForm_δδ sqf one hd,
     ← adj, base_equiv_one sqf one hd, break_trip hd]
   simp only [map_add, Fin.isValue, Finsupp.coe_add, Pi.add_apply]
   rw [aux_traceForm_1δ sqf one hd, zero_add, ← base_equiv_one sqf one hd, adj]
-  replace cast : @OfNat.ofNat (Algebra.adjoin ℤ {γ}) 1 One.toOfNat1 + @Int.cast (Algebra.adjoin ℤ {γ}) AddGroupWithOne.toIntCast (k hd) =
+  replace cast : @OfNat.ofNat (Algebra.adjoin ℤ {γ}) 1 One.toOfNat1 +
+    @Int.cast (Algebra.adjoin ℤ {γ}) AddGroupWithOne.toIntCast (k hd) =
     ((algebraMap ℤ (Algebra.adjoin ℤ {γ})) (1 + (k hd))) := by
       rw [algebraMap_int_eq, eq_intCast, Int.cast_add, Int.cast_one]
   have := Basis.repr_self_apply (basis zbase)
-    ((finChange.equi (base_dim sqf one hd)) 1)
-    ((finChange.equi (base_dim sqf one hd)) 1)
-  rw [ite_cond_eq_true _ _ (eq_self ((finChange.equi (base_dim sqf one hd)) 1))] at this
+    (finCongr (base_dim sqf one hd) 1)
+    (finCongr (base_dim sqf one hd) 1)
+  rw [ite_cond_eq_true _ _ (eq_self (finCongr (base_dim sqf one hd) 1))] at this
   rw [cast, Basis.repr_smul', this, mul_one, add_comm, add_assoc, Int.two_mul (k hd)]
 
 noncomputable def traceMat : Matrix (Fin 2) (Fin 2) ℤ := !![2, 1; 1, 1 + 2 * (k hd)]
 
 private theorem mat_conv :
-  (Matrix.reindexAlgEquiv ℤ ℤ (finChange.equi (base_dim sqf one hd)).symm)
+  (Matrix.reindexAlgEquiv ℤ ℤ (finCongr (base_dim sqf one hd)).symm)
     (Algebra.traceMatrix ℤ (basis zbase)) = traceMat hd := Matrix.ext fun i j ↦ by
   fin_cases i <;> fin_cases j
   all_goals simp only [Fin.zero_eta, Fin.isValue, Fin.mk_one,
@@ -927,7 +916,7 @@ private theorem mat_conv :
     exact traceForm_δδ sqf one hd
 
 private theorem discr_z : Algebra.discr ℤ (basis zbase) = d := by
-  have := Matrix.det_reindexAlgEquiv ℤ ℤ (finChange.equi (base_dim sqf one hd)).symm
+  have := Matrix.det_reindexAlgEquiv ℤ ℤ (finCongr (base_dim sqf one hd)).symm
     (Algebra.traceMatrix ℤ (basis zbase))
   rw [Algebra.discr_def, ← this, mat_conv sqf one hd, traceMat, Matrix.det_fin_two_of,
     mul_add, mul_one, mul_one, ← mul_assoc, show (2 : ℤ) * 2 = 4 by rfl, hk hd]; group
