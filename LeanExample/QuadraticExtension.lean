@@ -1,4 +1,17 @@
-import Mathlib
+import Mathlib.Algebra.CharP.IntermediateField
+import Mathlib.Algebra.GroupWithZero.Action.Faithful
+import Mathlib.Algebra.Lie.OfAssociative
+import Mathlib.Algebra.Polynomial.Eval.Irreducible
+import Mathlib.Algebra.Polynomial.SpecificDegree
+import Mathlib.Analysis.CStarAlgebra.Classes
+import Mathlib.Analysis.SpecialFunctions.Pow.Complex
+import Mathlib.Data.Int.Lemmas
+import Mathlib.Data.Int.Star
+import Mathlib.NumberTheory.Multiplicity
+import Mathlib.NumberTheory.NumberField.Discriminant.Defs
+import Mathlib.Order.CompletePartialOrder
+import Mathlib.RingTheory.DedekindDomain.Dvr
+import Mathlib.Tactic.Qify
 
 open IntermediateField Polynomial PowerBasis NumberField
 
