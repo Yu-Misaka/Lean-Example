@@ -499,7 +499,7 @@ instance : Module.Free ℤ (Algebra.adjoin ℤ {√-d}) := ⟨⟨Fin (dim zbase)
 private theorem traceForm_11 :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {√-d}) 1 1 = 2 := by
   rw [Algebra.traceForm_apply, one_mul,
-    ← @algebraMap.coe_one ℤ (Algebra.adjoin ℤ {√-d}) _ _,
+    ← @algebraMap.coe_one ℤ (Algebra.adjoin ℤ {√-d}) ..,
     Algebra.trace_algebraMap, finrank zbase,
     base_dim sqf one, nsmul_eq_mul, Nat.cast_ofNat, mul_one]
 
@@ -605,16 +605,11 @@ noncomputable def ring_of_int' : 𝓞 ℚ⟮√-d⟯ ≃ₐ[ℤ] Algebra.adjoin 
   toFun x := ⟨x, (ring_of_int sqf one hd x).1 x.2⟩
   invFun y := ⟨⟨y.1, adjoin_mem₄ sqf one y⟩,
     (ring_of_int sqf one hd ⟨y.1, adjoin_mem₄ sqf one y⟩).2 y.2⟩
-  left_inv x := rfl
-  right_inv y := by
-    simp only [RingOfIntegers.map_mk, Subtype.coe_eta]
-  map_mul' x y := by
-    simp only [map_mul, MulMemClass.coe_mul, MulMemClass.mk_mul_mk]
-  map_add' x y := by
-    simp only [map_add, AddMemClass.coe_add, AddMemClass.mk_add_mk]
-  commutes' x := by
-    simp only [algebraMap_int_eq, eq_intCast, map_intCast, SubringClass.coe_intCast]
-    rfl
+  left_inv _ := rfl
+  right_inv _ := rfl
+  map_mul' _ _ := rfl
+  map_add' _ _ := rfl
+  commutes' _ := rfl
 
 noncomputable abbrev intbase :=
   PowerBasis.map zbase (ring_of_int' sqf one hd).symm
@@ -827,7 +822,7 @@ instance free_mod : Module.Free ℤ (Algebra.adjoin ℤ {γ}) := ⟨⟨Fin (dim 
 
 private theorem traceForm_11 :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {γ}) 1 1 = 2 := by
-  rwa [Algebra.traceForm_apply, one_mul, ← @algebraMap.coe_one ℤ (Algebra.adjoin ℤ {γ}) _ _,
+  rwa [Algebra.traceForm_apply, one_mul, ← @algebraMap.coe_one ℤ (Algebra.adjoin ℤ {γ}) ..,
     @Algebra.trace_algebraMap ℤ (Algebra.adjoin ℤ {γ}) _ _ _ _ (free_mod hd) 1,
     finrank zbase, base_dim sqf one, nsmul_eq_mul, Nat.cast_ofNat, mul_one]
 
@@ -962,16 +957,11 @@ noncomputable def ring_of_int' : 𝓞 ℚ⟮√-d⟯ ≃ₐ[ℤ] Algebra.adjoin 
   toFun x := ⟨x, (ring_of_int sqf one hd x).1 x.2⟩
   invFun y := ⟨⟨y.1, adjoin_mem₆ sqf one hd y⟩,
     (ring_of_int sqf one hd ⟨y.1, adjoin_mem₆ sqf one hd y⟩).2 y.2⟩
-  left_inv x := rfl
-  right_inv y := by
-    simp only [RingOfIntegers.map_mk, Subtype.coe_eta]
-  map_mul' x y := by
-    simp only [map_mul, MulMemClass.coe_mul, MulMemClass.mk_mul_mk]
-  map_add' x y := by
-    simp only [map_add, AddMemClass.coe_add, AddMemClass.mk_add_mk]
-  commutes' x := by
-    simp only [algebraMap_int_eq, eq_intCast, map_intCast, SubringClass.coe_intCast]
-    rfl
+  left_inv _ := rfl
+  right_inv _ := rfl
+  map_mul' _ _ := rfl
+  map_add' _ _ := rfl
+  commutes' _ := rfl
 
 noncomputable abbrev intbase :=
   PowerBasis.map zbase (ring_of_int' sqf one hd).symm
