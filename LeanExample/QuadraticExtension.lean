@@ -17,9 +17,9 @@ open IntermediateField Polynomial PowerBasis NumberField
 
 section quadratic
 
-theorem finChange {l n : ℕ} (hl : l = n) {T : Type*} {f : Fin l → T} [AddCommMonoid T] :
-  ∑ i : Fin l, f i = ∑ i : Fin n, f ((finCongr hl.symm).toFun i) :=
-    (Fin.sum_congr' f hl.symm).symm
+theorem finChange {l n : ℕ} (hl : n = l) {T : Type*} {f : Fin l → T} [AddCommMonoid T] :
+  ∑ i : Fin l, f i = ∑ i : Fin n, f ((finCongr hl).toFun i) :=
+    (Fin.sum_congr' f hl).symm
 
 variable {R S : Type*} [CommRing R] [Ring S] [Algebra R S]
 variable {base : PowerBasis R S} (hdim : 2 = dim base)
@@ -40,7 +40,7 @@ theorem quadratic.repr (α : S) :
   have := Basis.sum_repr (basis base) α
   have foo : ∀ r : R, r • (1 : S) = (algebraMap R S) r := fun r ↦
     (Algebra.algebraMap_eq_smul_one r).symm
-  rw [finChange hdim.symm, Fin.sum_univ_two,
+  rw [finChange hdim, Fin.sum_univ_two,
     show (finCongr hdim).toFun = finCongr hdim by rfl, base_equiv_zero hdim, foo] at this
   exact ⟨((basis base).repr α) (finCongr hdim 0),
     ((basis base).repr α) (finCongr hdim 1), this.symm⟩
@@ -504,7 +504,7 @@ private theorem traceForm_11 :
 private theorem traceForm_1δ :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {√-d}) 1 δ = 0 := by
   rw [Algebra.traceForm_apply, one_mul, Algebra.trace_eq_matrix_trace (basis zbase)
-    δ, Matrix.trace, finChange (base_dim sqf one).symm]
+    δ, Matrix.trace, finChange (base_dim sqf one)]
   simp only [Equiv.toFun_as_coe, Matrix.diag_apply, Fin.sum_univ_two, Fin.isValue]
   rw [Algebra.leftMulMatrix_eq_repr_mul, Algebra.leftMulMatrix_eq_repr_mul,
     base_equiv_zero (base_dim sqf one), mul_one]
@@ -532,7 +532,7 @@ private theorem traceForm_δ1 :
 private theorem traceForm_δδ :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {√-d}) δ δ = 2 * d := by
   rw [Algebra.traceForm_apply, ← sq, sqd_sq, Algebra.trace_eq_matrix_trace (basis zbase)
-    d, Matrix.trace, finChange (base_dim sqf one).symm]
+    d, Matrix.trace, finChange (base_dim sqf one)]
   simp only [Equiv.toFun_as_coe, Matrix.diag_apply, Fin.sum_univ_two, Fin.isValue]
   rw [Algebra.leftMulMatrix_eq_repr_mul, Algebra.leftMulMatrix_eq_repr_mul,
     base_equiv_zero (base_dim sqf one), mul_one]
@@ -864,7 +864,7 @@ private theorem aux_traceForm_1δ'' :
 private theorem traceForm_1δ :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {γ}) 1 δ = 1 := by
   rw [Algebra.traceForm_apply, one_mul, Algebra.trace_eq_matrix_trace (basis zbase)
-    δ, Matrix.trace, finChange (base_dim sqf one hd).symm]
+    δ, Matrix.trace, finChange (base_dim sqf one hd)]
   simp only [Equiv.toFun_as_coe, Matrix.diag_apply, Fin.sum_univ_two, Fin.isValue]
   rw [Algebra.leftMulMatrix_eq_repr_mul, Algebra.leftMulMatrix_eq_repr_mul,
     base_equiv_zero (base_dim sqf one hd), mul_one]
@@ -892,7 +892,7 @@ private theorem aux_traceForm_δδ :
 private theorem traceForm_δδ :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {γ}) δ δ = 1 + 2 * (k hd) := by
   rw [Algebra.traceForm_apply, Algebra.trace_eq_matrix_trace (basis zbase)
-    _, Matrix.trace, finChange (base_dim sqf one hd).symm]
+    _, Matrix.trace, finChange (base_dim sqf one hd)]
   simp only [Equiv.toFun_as_coe, Matrix.diag_apply, Fin.sum_univ_two, Fin.isValue]
   rw [Algebra.leftMulMatrix_eq_repr_mul, Algebra.leftMulMatrix_eq_repr_mul,
     base_equiv_zero (base_dim sqf one hd), mul_one, aux_traceForm_δδ sqf one hd,
