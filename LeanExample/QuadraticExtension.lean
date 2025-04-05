@@ -38,7 +38,7 @@ noncomputable abbrev adj := (basis base) (finChange.equi hdim 1)
 
 theorem quadratic.repr (α : S) :
     ∃ r s : R, α = (algebraMap R S) r + s • (adj hdim) := by
-  have := Basis.sum_repr (PowerBasis.basis base) α
+  have := Basis.sum_repr (basis base) α
   rw [finChange.change hdim, Fin.sum_univ_two] at this
   have foo : ∀ r : R, r • (1 : S) = (algebraMap R S) r := fun r ↦
     (Algebra.algebraMap_eq_smul_one r).symm
@@ -91,7 +91,7 @@ private theorem integral : IsIntegral ℚ √-d := by
 instance : Module.Finite ℚ ℚ⟮√-d⟯ := adjoin.finiteDimensional integral
 instance : NumberField ℚ⟮√-d⟯ := NumberField.mk
 
-local notation3 "base" => IntermediateField.adjoin.powerBasis integral (x := √-d)
+local notation3 "base" => adjoin.powerBasis integral (x := √-d)
 local notation3 "δ" => AdjoinSimple.gen ℚ √-d
 
 private theorem sqd_sq : δ ^ 2 = d := by
@@ -144,7 +144,7 @@ private theorem poly_min : minpoly ℚ (√-d) = poly := by
 
 private theorem base_dim : dim base = 2 :=
   have : Module.finrank ℚ ℚ⟮√-d⟯ = 2 :=
-    poly_natDegree ▸ poly_min sqf one ▸ IntermediateField.adjoin.finrank integral
+    poly_natDegree ▸ poly_min sqf one ▸ adjoin.finrank integral
   (this ▸ finrank base).symm
 
 private theorem base_equiv_one : adj (base_dim sqf one) = δ := by
@@ -240,7 +240,7 @@ private theorem minpoly_of_not_mem {x : ℚ⟮√-d⟯} : x ∉ (algebraMap ℚ 
   intro h
   refine ⟨⟨a, ⟨b, c⟩⟩, ⟨?_, hc, hn, hx⟩⟩
   rw [← minpoly.two_le_natDegree_iff (IsIntegral.of_finite ℚ x)] at h
-  refine (Polynomial.eq_of_monic_of_dvd_of_natDegree_le
+  refine (eq_of_monic_of_dvd_of_natDegree_le
     (minpoly.monic (IsIntegral.of_finite ℚ x)) ?_ hmin ?_).symm
   · monicity!
   · compute_degree!
@@ -392,7 +392,7 @@ theorem adjoin_mem₁ {x : ℚ⟮√-d⟯} {c : ℂ} (hx : x ∈ (algebraMap ℚ
     (h : x ∈ (integralClosure ℤ ℚ⟮√-d⟯)) : x.1 ∈ Algebra.adjoin ℤ {c} := by
   rw [minpoly_of_int] at h
   have minpoly_deg := minpoly.natDegree_eq_one_iff.2 hx
-  rw [h, Polynomial.natDegree_map_eq_of_injective, minpoly.natDegree_eq_one_iff] at minpoly_deg
+  rw [h, natDegree_map_eq_of_injective, minpoly.natDegree_eq_one_iff] at minpoly_deg
   swap; exact RingHom.injective_int (algebraMap ℤ ℚ)
   obtain ⟨x', hx'⟩ := minpoly_deg
   simp only [algebraMap_int_eq, eq_intCast] at hx'
@@ -411,7 +411,7 @@ theorem adjoin_mem₃ {x : ℚ⟮√-d⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮√
   obtain ⟨hmin, -, -⟩ := Q.calc_min_prop sqf one hx
   apply_fun (Polynomial.map (algebraMap ℚ ℂ) · ) at hmin
   rw [minpoly_break] at hmin
-  apply_fun (Polynomial.aeval (x : ℂ) · ) at hmin
+  apply_fun (aeval (x : ℂ) · ) at hmin
   simp only [aeval_map_algebraMap, Subalgebra.aeval_coe, minpoly.aeval, ZeroMemClass.coe_zero,
     Rat.cast_intCast, one_div, hone, Nat.cast_one, Rat.cast_one, div_one, map_add, map_intCast,
     map_mul, map_sub, coe_aeval_eq_eval, eval_mul, eval_sub, eval_X, eval_add, eval_intCast, eval_C,
@@ -436,7 +436,7 @@ theorem integralz : IsIntegral ℤ √-d := by
   · simp only [algebraMap_int_eq, one_div, eq_intCast, eval₂_sub, eval₂_X_pow,
     Complex.cpow_ofNat_inv_pow]
     show d - eval₂ (Int.castRingHom ℂ) ((d : ℂ) ^ (2⁻¹ : ℂ)) (C d) = 0
-    rw [Polynomial.eval₂_C, eq_intCast, sub_self]
+    rw [eval₂_C, eq_intCast, sub_self]
 
 local notation3 "zbase" => Algebra.adjoin.powerBasis' (@integralz d)
 
@@ -523,7 +523,7 @@ private theorem traceForm_11 :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {√-d}) 1 1 = 2 := by
   rw [Algebra.traceForm_apply, one_mul,
     ← @algebraMap.coe_one ℤ (Algebra.adjoin ℤ {√-d}) _ _,
-    Algebra.trace_algebraMap, PowerBasis.finrank zbase,
+    Algebra.trace_algebraMap, finrank zbase,
     base_dim sqf one, nsmul_eq_mul, Nat.cast_ofNat, mul_one]
 
 private theorem traceForm_1δ :
@@ -653,7 +653,7 @@ noncomputable abbrev intbase :=
   PowerBasis.map zbase (ring_of_int' sqf one hd).symm
 
 theorem final : NumberField.discr ℚ⟮√-d⟯ = 4 * d := by
-  rw [← NumberField.discr_eq_discr ℚ⟮√-d⟯ (intbase sqf one hd).basis, intbase]
+  rw [← discr_eq_discr ℚ⟮√-d⟯ (intbase sqf one hd).basis, intbase]
   simp only [map_dim, map_basis]
   have : (basis zbase).map (ring_of_int' sqf one hd).symm.toLinearEquiv =
     (ring_of_int' sqf one hd).symm ∘ (basis zbase) := by
@@ -690,14 +690,14 @@ theorem polyz_Monic : (polyz hd).Monic := by
 
 local notation "γ" => (1 + √-d) / 2
 
-theorem eval_zero : Polynomial.eval₂ (algebraMap ℤ ℂ) γ (polyz hd) = 0 := by
+theorem eval_zero : eval₂ (algebraMap ℤ ℂ) γ (polyz hd) = 0 := by
   unfold polyz
   simp only [algebraMap_int_eq, eq_intCast, Int.cast_one, one_mul, eval₂_sub, eval₂_X_pow,
     eval₂_X]
   conv =>
     enter [1, 2]
     change eval₂ (algebraMap ℤ ℂ) γ (C (k hd))
-    rw [Polynomial.eval₂_C, algebraMap_int_eq, eq_intCast]
+    rw [eval₂_C, algebraMap_int_eq, eq_intCast]
   ring_nf
   simp only [one_div, Complex.cpow_ofNat_inv_pow]
   have : (-1 / 4 + ((d : ℂ) * 4⁻¹ - (k hd))) * 4 = 0 := by
@@ -791,7 +791,7 @@ private theorem rat_sq_sub_ne_zero (a : ℚ) : a ^ 2 - a - (k hd) ≠ 0 := by
   exact (Q.rat_sq_sub_ne_zero sqf one (2 * a - 1)) this
 
 private theorem polyz_irr : Irreducible (polyz hd) := by
-  refine Polynomial.Monic.irreducible_of_irreducible_map (algebraMap ℤ ℚ)
+  refine Monic.irreducible_of_irreducible_map (algebraMap ℤ ℚ)
     (polyz hd) (polyz_Monic hd) ?_
   refine (irreducible_iff_roots_eq_zero_of_degree_le_three ?_ ?_).2 ?_
   <;> (try rw [polyq_natDegree hd]); (try omega)
@@ -875,7 +875,7 @@ private theorem traceForm_11 :
     Algebra.traceForm ℤ (Algebra.adjoin ℤ {γ}) 1 1 = 2 := by
   rwa [Algebra.traceForm_apply, one_mul, ← @algebraMap.coe_one ℤ (Algebra.adjoin ℤ {γ}) _ _,
     @Algebra.trace_algebraMap ℤ (Algebra.adjoin ℤ {γ}) _ _ _ _ (free_mod hd) 1,
-    PowerBasis.finrank zbase, base_dim sqf one, nsmul_eq_mul, Nat.cast_ofNat, mul_one]
+    finrank zbase, base_dim sqf one, nsmul_eq_mul, Nat.cast_ofNat, mul_one]
 
 private theorem aux_traceForm_1δ :
     ((basis zbase).repr (k hd)) ((finChange.equi (base_dim sqf one hd)) 1) = 0 := by
@@ -1033,7 +1033,7 @@ noncomputable abbrev intbase :=
   PowerBasis.map zbase (ring_of_int' sqf one hd).symm
 
 theorem final : NumberField.discr ℚ⟮√-d⟯ = d := by
-  rw [← NumberField.discr_eq_discr ℚ⟮√-d⟯ (intbase sqf one hd).basis, intbase]
+  rw [← discr_eq_discr ℚ⟮√-d⟯ (intbase sqf one hd).basis, intbase]
   simp only [map_dim, map_basis]
   have : (basis zbase).map (ring_of_int' sqf one hd).symm.toLinearEquiv =
     (ring_of_int' sqf one hd).symm ∘ (basis zbase) := by
@@ -1064,6 +1064,6 @@ theorem quadratic_discr :
         simp only [Int.cast_one, one_div, Complex.one_cpow, Set.singleton_subset_iff,
           SetLike.mem_coe]
         exact IntermediateField.one_mem _
-      exact (IntermediateField.equivOfEq this).trans (botEquiv ℚ ℂ)
+      exact (equivOfEq this).trans (botEquiv ℚ ℂ)
     · intro hcong
       rw [one] at hcong; tauto
