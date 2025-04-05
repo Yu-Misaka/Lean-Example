@@ -29,7 +29,7 @@ include hdim
 
 private theorem base_equiv_zero : (basis base) (finChange.equi hdim 0) = 1 := by
   have : (finChange.equi hdim 0) = ⟨0, by rw [hdim]; omega⟩ := rfl
-  rw [this, basis_eq_pow base ⟨0, by rw [hdim]; omega⟩]
+  rw [this, basis_eq_pow base _]
   simp only [adjoin.powerBasis_gen, pow_zero]
 
 include base
@@ -117,8 +117,9 @@ private theorem rat_sq_sub_ne_zero (a : ℚ) : a ^ 2 - d ≠ 0 := by
   replace dvd : a.num.natAbs = 1 := Nat.Coprime.eq_one_of_dvd (Rat.reduced a) <|
     Nat.Coprime.dvd_of_dvd_mul_left (Rat.reduced a) dvd
   rw [show a.num ^ 2 = a.num.natAbs ^ 2 by exact Int.natAbs_eq_iff_sq_eq.mp rfl,
-    dvd, show @Nat.cast ℤ instNatCastInt 1 = 1 by rfl, one_pow] at this
-  rw [Int.eq_one_of_mul_eq_one_left (Int.ofNat_zero_le (a.den ^ 2)) this.symm, mul_one] at this
+    dvd, show @Nat.cast ℤ instNatCastInt 1 = 1 by rfl, one_pow,
+    Int.eq_one_of_mul_eq_one_left (Int.ofNat_zero_le (a.den ^ 2)) this.symm,
+    mul_one] at this
   exact one this.symm
 
 private theorem sqrt_d_not_mem : (√-d) ∉ (algebraMap ℚ ℂ).range := by
@@ -150,7 +151,7 @@ private theorem base_dim : dim base = 2 :=
 private theorem base_equiv_one : adj (base_dim sqf one) = δ := by
   have : (finChange.equi (base_dim sqf one) 1) =
     ⟨1, by rw [(base_dim sqf one)]; omega⟩ := rfl
-  rw [adj, this, basis_eq_pow base ⟨1, by rw [(base_dim sqf one)]; omega⟩]
+  rw [adj, this, basis_eq_pow base _]
   simp only [adjoin.powerBasis_gen, pow_one]
 
 private theorem linear_comb (α : ℚ⟮√-d⟯) : ∃ r s : ℚ, α = r + s * δ := by
@@ -225,9 +226,9 @@ theorem minpoly_div (x : ℚ⟮√-d⟯) : ∃ a b : ℤ, ∃ c : ℕ,
     x = (a + b * δ) / (c : ℚ) := by
   obtain ⟨a, b, c, ⟨hx, hc, hn⟩⟩ := repr sqf one x
   refine ⟨a, b, c, ⟨minpoly.dvd_iff.2 ?_, hc, hn, hx⟩⟩
-  simp only [hx, Rat.cast_natCast, map_add, map_sub, map_pow, aeval_X, map_mul, aeval_C, map_div₀,
-    eq_ratCast, Rat.cast_mul, Rat.cast_ofNat, Rat.cast_intCast, map_natCast, Rat.cast_sub,
-    Rat.cast_pow]
+  simp only [hx, Rat.cast_natCast, map_add, map_sub, map_pow, aeval_X, map_mul, aeval_C,
+    map_div₀, eq_ratCast, Rat.cast_mul, Rat.cast_ofNat, Rat.cast_intCast, map_natCast,
+    Rat.cast_sub, Rat.cast_pow]
   ring_nf; rw [sqd_sq]; ring
 
 private theorem minpoly_of_not_mem {x : ℚ⟮√-d⟯} : x ∉ (algebraMap ℚ ℚ⟮√-d⟯).range →
@@ -237,8 +238,7 @@ private theorem minpoly_of_not_mem {x : ℚ⟮√-d⟯} : x ∉ (algebraMap ℚ 
     (∀ n : ℤ, n ∣ r.1 ∧ n ∣ r.2.1 ∧ n ∣ r.2.2 → IsUnit n) ∧
     x = (r.1 + r.2.1 * δ) / (r.2.2 : ℚ) := by
   obtain ⟨a, b, c, ⟨hmin, hc, ⟨hn, hx⟩⟩⟩ := minpoly_div sqf one x
-  intro h
-  refine ⟨⟨a, ⟨b, c⟩⟩, ⟨?_, hc, hn, hx⟩⟩
+  refine fun h ↦ ⟨⟨a, ⟨b, c⟩⟩, ⟨?_, hc, hn, hx⟩⟩
   rw [← minpoly.two_le_natDegree_iff (IsIntegral.of_finite ℚ x)] at h
   refine (eq_of_monic_of_dvd_of_natDegree_le
     (minpoly.monic (IsIntegral.of_finite ℚ x)) ?_ hmin ?_).symm
@@ -276,19 +276,16 @@ private theorem aux_copri₀ {a b : ℤ} {c : ℕ}
   (hn : ∀ n : ℤ, n ∣ a ∧ n ∣ b ∧ n ∣ c → IsUnit n) :
     (c.gcd a.natAbs).Coprime b.natAbs := by
   by_contra not_copri
-  simp only [ne_eq] at not_copri
-  set w := (c.gcd a.natAbs).gcd b.natAbs with def_w
-  have dvd₁ : w ∣ a.natAbs := by
-    rw [def_w, Nat.gcd_comm, ← Nat.gcd_assoc]
+  have dvd₁ : (c.gcd a.natAbs).gcd b.natAbs ∣ a.natAbs := by
+    rw [Nat.gcd_comm, ← Nat.gcd_assoc]
     exact Nat.gcd_dvd_right (b.natAbs.gcd c) a.natAbs
-  have dvd₂ : w ∣ b.natAbs := by
-    rw [def_w]
-    exact Nat.gcd_dvd_right (c.gcd a.natAbs) b.natAbs
-  have dvd₃ : w ∣ c := by
-    rw [def_w, Nat.gcd_assoc]
+  have dvd₂ : (c.gcd a.natAbs).gcd b.natAbs ∣ b.natAbs :=
+    Nat.gcd_dvd_right (c.gcd a.natAbs) b.natAbs
+  have dvd₃ : (c.gcd a.natAbs).gcd b.natAbs ∣ c := by
+    rw [Nat.gcd_assoc]
     exact Nat.gcd_dvd_left c (a.natAbs.gcd b.natAbs)
-  replace hn := hn w ⟨Int.ofNat_dvd_left.2 dvd₁, Int.ofNat_dvd_left.2 dvd₂,
-    Int.ofNat_dvd.2 dvd₃⟩
+  replace hn := hn ((c.gcd a.natAbs).gcd b.natAbs)
+    ⟨Int.ofNat_dvd_left.2 dvd₁, Int.ofNat_dvd_left.2 dvd₂, Int.ofNat_dvd.2 dvd₃⟩
   rw [Int.ofNat_isUnit, Nat.isUnit_iff] at hn
   exact not_copri hn
 
@@ -306,7 +303,6 @@ private theorem aux_copri₁ {a b : ℤ} {c : ℕ}
   (hdiv : (c ^ 2 : ℤ) ∣ (a ^ 2 - b ^ 2 * d)) :
     c.Coprime a.natAbs := by
   by_contra!
-  simp only [ne_eq] at this
   obtain ⟨k', hk'⟩ := hdiv
   apply_fun (- (- a ^ 2 + · )) at hk'
   simp only [Pi.neg_apply, neg_add_rev, neg_sub, neg_neg, sub_add_cancel] at hk'
@@ -321,9 +317,8 @@ private theorem aux_copri₁ {a b : ℤ} {c : ℕ}
   replace hk'' := Nat.Coprime.dvd_of_dvd_mul_left
     (Nat.Coprime.pow 2 2 (aux_copri₀ hn)) <|
       by rwa [← Int.natAbs_pow b 2, ← Int.natAbs_mul, ← Int.ofNat_dvd_left]
-  replace sqf := Nat.isUnit_iff.1 <|
+  exact this <| Nat.isUnit_iff.1 <|
     (Int.squarefree_natAbs.2 sqf) (c.gcd a.natAbs) (by rwa [← sq])
-  exact this sqf
 
 include sqf in
 theorem aux_congruent {a b : ℤ}
@@ -333,13 +328,11 @@ theorem aux_congruent {a b : ℤ}
   have hc : 2 ≠ 0 := (Nat.zero_ne_add_one 1).symm
   have odd_a : Odd a :=
     Int.natAbs_odd.1 <| Nat.Coprime.odd_of_left (aux_copri₁ sqf hn hdvd)
-  have odd_a_sq : Odd (a ^ 2) := (Int.odd_pow' hc).2 odd_a
   have even_ab : Even (a ^ 2 - b ^ 2 * d) :=
     even_iff_two_dvd.mpr <| dvd_trans (dvd_pow_self 2 hc) hdvd
-  have odd_b := Odd.sub_even odd_a_sq even_ab
+  have odd_b := Odd.sub_even ((Int.odd_pow' hc).2 odd_a) even_ab
   rw [sub_sub_cancel] at odd_b
-  replace odd_b : Odd b := Int.Odd.of_mul_right <| Int.Odd.of_mul_left odd_b
-  exact ⟨odd_a, odd_b⟩
+  exact ⟨odd_a, Int.Odd.of_mul_right <| Int.Odd.of_mul_left odd_b⟩
 
 include sqf in
 theorem congruent {a b : ℤ}
@@ -347,7 +340,6 @@ theorem congruent {a b : ℤ}
   (hn : ∀ (n : ℤ), n ∣ a ∧ n ∣ b ∧ n ∣ (2 : ℤ) → IsUnit n) :
     d ≡ 1 [ZMOD 4] := by
   obtain ⟨odd_a, odd_b⟩ := aux_congruent sqf hdvd hn
-  simp only [Nat.cast_ofNat, Int.reducePow] at hdvd
   replace hzero : a ^ 2 - b ^ 2 * d ≡ 0 [ZMOD 4] :=
     Int.ModEq.symm (Dvd.dvd.zero_modEq_int hdvd)
   have mod_b_sq : b ^ 2 ≡ 1 [ZMOD 4] := Int.sq_mod_four_eq_one_of_odd odd_b
@@ -355,14 +347,13 @@ theorem congruent {a b : ℤ}
   simp only [sub_add_cancel, one_mul, zero_add] at hzero
   exact hzero.symm.trans <| Int.sq_mod_four_eq_one_of_odd odd_a
 
-theorem minpoly_of_int' {x : ℚ⟮√-d⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮√-d⟯).range) :
-    x ∈ (integralClosure ℤ ℚ⟮√-d⟯) →
+theorem minpoly_of_int' {x : ℚ⟮√-d⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮√-d⟯).range)
+    (h : x ∈ (integralClosure ℤ ℚ⟮√-d⟯)) :
   (Q.calc_min sqf one hx).2.2 ∣ 2 ∧
   ((Q.calc_min sqf one hx).2.2 : ℤ) ^ 2 ∣
     (Q.calc_min sqf one hx).1 ^ 2 - (Q.calc_min sqf one hx).2.1 ^ 2 * d := by
-  intro h
   rw [minpoly_of_int] at h
-  obtain ⟨hmin, hc, hn ⟩ := Q.calc_min_prop sqf one hx
+  obtain ⟨hmin, hc, hn⟩ := Q.calc_min_prop sqf one hx
   rw [h] at hmin
   have hmin₁ := hmin
   apply_fun (- ·.coeff 1) at hmin₁
@@ -383,10 +374,8 @@ theorem minpoly_of_int' {x : ℚ⟮√-d⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮�
   exact ⟨Int.ofNat_dvd.1 <| Int.dvd_of_dvd_mul_left_of_gcd_one hmin₁
     (aux_copri₁ sqf hn.1 hmin₀), hmin₀⟩
 
-private theorem adjoin_mem₀ {a : ℤ} {c : ℂ}: (a : ℂ) ∈ Algebra.adjoin ℤ {c} := by
-  suffices (a : ℂ) ∈ (⊥ : Subalgebra ℤ ℂ) from
-    (bot_le (a := Algebra.adjoin ℤ {c})) this
-  exact Subalgebra.intCast_mem ⊥ a
+private theorem adjoin_mem₀ {a : ℤ} {c : ℂ}: (a : ℂ) ∈ Algebra.adjoin ℤ {c} :=
+  bot_le (a := Algebra.adjoin ℤ {c}) <| Subalgebra.intCast_mem ⊥ a
 
 theorem adjoin_mem₁ {x : ℚ⟮√-d⟯} {c : ℂ} (hx : x ∈ (algebraMap ℚ ℚ⟮√-d⟯).range)
     (h : x ∈ (integralClosure ℤ ℚ⟮√-d⟯)) : x.1 ∈ Algebra.adjoin ℤ {c} := by
@@ -395,9 +384,7 @@ theorem adjoin_mem₁ {x : ℚ⟮√-d⟯} {c : ℂ} (hx : x ∈ (algebraMap ℚ
   rw [h, natDegree_map_eq_of_injective, minpoly.natDegree_eq_one_iff] at minpoly_deg
   swap; exact RingHom.injective_int (algebraMap ℤ ℚ)
   obtain ⟨x', hx'⟩ := minpoly_deg
-  simp only [algebraMap_int_eq, eq_intCast] at hx'
-  rw [← hx', SubringClass.coe_intCast]
-  show (x' : ℂ) ∈ Subsemiring.closure (Set.range (algebraMap ℤ ℂ) ∪ {c})
+  rw [← hx', algebraMap_int_eq, eq_intCast, SubringClass.coe_intCast]
   exact Subsemiring.subset_closure (Set.subset_union_left (Set.mem_range_self x'))
 
 theorem adjoin_mem₂ {a : ℚ} {c : ℂ}: (a : ℂ) ∈ ℚ⟮c⟯ := by
@@ -443,9 +430,9 @@ local notation3 "zbase" => Algebra.adjoin.powerBasis' (@integralz d)
 private theorem min_polyz_natDegree_le : (minpoly ℤ √-d).natDegree ≤ 2 := by
   rw [← @polyz_natDegree d]
   refine natDegree_le_of_dvd ?_ (X_pow_sub_C_ne_zero (Nat.zero_lt_two) d)
-  · refine minpoly.isIntegrallyClosed_dvd integralz ?_
-    simp only [one_div, eq_intCast, map_sub, map_pow, aeval_X, Complex.cpow_ofNat_inv_pow,
-      map_intCast, sub_self]
+  refine minpoly.isIntegrallyClosed_dvd integralz ?_
+  simp only [one_div, eq_intCast, map_sub, map_pow, aeval_X, Complex.cpow_ofNat_inv_pow,
+    map_intCast, sub_self]
 
 noncomputable abbrev δ : Algebra.adjoin ℤ {√-d} :=
   ⟨√-d, SetLike.mem_coe.1 <| Algebra.subset_adjoin <| Set.mem_singleton √-d⟩
@@ -470,8 +457,7 @@ private theorem min_polyz_natDegree : (minpoly ℤ √-d).natDegree = 2 := by
   rintro ⟨x, hx : (algebraMap ℚ ℂ) x = √-d⟩
   have := Q.sqrt_d_not_mem sqf one
   rw [← hx] at this
-  absurd this
-  exact RingHom.mem_range_self (algebraMap ℚ ℂ) x
+  exact this <| RingHom.mem_range_self (algebraMap ℚ ℂ) x
 
 private theorem base_dim : dim zbase = 2 := by
   rw [Algebra.adjoin.powerBasis'_dim, min_polyz_natDegree sqf one]
@@ -479,7 +465,7 @@ private theorem base_dim : dim zbase = 2 := by
 private theorem base_equiv_one : adj (base_dim sqf one) = δ := by
   have : (finChange.equi (base_dim sqf one) 1) =
     ⟨1, by rw [(base_dim sqf one)]; omega⟩ := rfl
-  rw [adj, this, basis_eq_pow zbase ⟨1, by rw [(base_dim sqf one)]; omega⟩]
+  rw [adj, this, basis_eq_pow zbase _]
   simp only [adjoin.powerBasis_gen, pow_one]
   exact Algebra.adjoin.powerBasis'_gen integralz
 
@@ -500,22 +486,13 @@ private theorem adjoin_mem₄ (α : Algebra.adjoin ℤ {√-d}) : α.1 ∈ ℚ�
 private theorem adjoin_of_ring_of_int (x : ℚ⟮√-d⟯) (h : x.1 ∈ Algebra.adjoin ℤ {√-d}) :
     x ∈ (integralClosure ℤ ℚ⟮√-d⟯) := by
   obtain ⟨r, s, hrs⟩ := int_linear_comb sqf one ⟨x, h⟩
-  apply Subtype.val_inj.2 at hrs
-  simp only [AddMemClass.coe_add, SubringClass.coe_intCast, MulMemClass.coe_mul,
-    one_div] at hrs
-  have : x = r + s * (AdjoinSimple.gen ℚ √-d) := by
-    apply Subtype.val_inj.1
-    simp only [AddMemClass.coe_add, SubringClass.coe_intCast, MulMemClass.coe_mul,
-      AdjoinSimple.coe_gen, one_div]
-    exact hrs
+  have : x = r + s * (AdjoinSimple.gen ℚ √-d) :=
+    Subtype.val_inj.1 <| by apply Subtype.val_inj.2 hrs
   rw [this]
-  refine add_mem ?_ ?_
-  · rw [mem_integralClosure_iff]
-    exact isIntegral_algebraMap
-  · refine mul_mem isIntegral_algebraMap ?_
-    · rw [mem_integralClosure_iff, ← isIntegral_algebraMap_iff (@algMap_inj d),
-        AdjoinSimple.algebraMap_gen ℚ (√-d)]
-      exact integralz
+  refine add_mem isIntegral_algebraMap <| mul_mem isIntegral_algebraMap ?_
+  rw [mem_integralClosure_iff, ← isIntegral_algebraMap_iff (@algMap_inj d),
+    AdjoinSimple.algebraMap_gen ℚ (√-d)]
+  exact integralz
 
 instance : Module.Free ℤ (Algebra.adjoin ℤ {√-d}) := ⟨⟨Fin (dim zbase), basis zbase⟩⟩
 
@@ -588,31 +565,21 @@ private theorem mat_conv :
   all_goals simp only [Fin.zero_eta, Fin.isValue, Fin.mk_one,
     Matrix.reindexAlgEquiv_apply, Matrix.reindex_apply, Equiv.symm_symm, Matrix.submatrix_apply]
   · rw [Algebra.traceMatrix, Matrix.of_apply, base_equiv_zero (base_dim sqf one)]
-    simp only [mul_one, traceMat, Fin.isValue, Matrix.of_apply, Matrix.cons_val',
-      Matrix.cons_val_zero, Matrix.cons_val_fin_one]
     exact traceForm_11 sqf one
   · rw [Algebra.traceMatrix, Matrix.of_apply, base_equiv_zero (base_dim sqf one), ← adj,
       base_equiv_one sqf one]
-    simp only [one_mul, traceMat, Fin.isValue, Matrix.of_apply, Matrix.cons_val',
-      Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val_fin_one, Matrix.cons_val_zero]
     exact traceForm_1δ sqf one
   · rw [Algebra.traceMatrix, Matrix.of_apply, base_equiv_zero (base_dim sqf one), ← adj,
       base_equiv_one sqf one]
-    simp only [mul_one, traceMat, Fin.isValue, Matrix.of_apply, Matrix.cons_val',
-      Matrix.cons_val_zero, Matrix.cons_val_fin_one, Matrix.cons_val_one, Matrix.head_fin_const]
     exact traceForm_δ1 sqf one
   · rw [Algebra.traceMatrix, Matrix.of_apply, ← adj, base_equiv_one sqf one]
-    simp only [MulMemClass.mk_mul_mk, one_div, traceMat, Fin.isValue,
-      Matrix.of_apply, Matrix.cons_val', Matrix.cons_val_one, Matrix.head_cons,
-      Matrix.cons_val_fin_one, Matrix.head_fin_const]
     exact traceForm_δδ sqf one
 
 private theorem discr_z : Algebra.discr ℤ (basis zbase) = 4 * d := by
-  rw [Algebra.discr_def]
   have := Matrix.det_reindexAlgEquiv ℤ ℤ (finChange.equi (base_dim sqf one)).symm
     (Algebra.traceMatrix ℤ (basis zbase))
-  rw [← this, mat_conv sqf one, traceMat, Matrix.det_fin_two_of, mul_zero, sub_zero,
-    ← mul_assoc]; rfl
+  rw [Algebra.discr_def, ← this, mat_conv sqf one, traceMat, Matrix.det_fin_two_of,
+    mul_zero, sub_zero, ← mul_assoc]; rfl
 
 variable (hd : ¬ d ≡ 1 [ZMOD 4])
 
@@ -677,7 +644,6 @@ noncomputable def k : ℤ := by
 theorem hk : 4 * (k hd) = d - 1 := by
   have := Int.ModEq.sub hd (show 1 ≡ 1 [ZMOD 4] by rfl)
   rw [sub_self, Int.modEq_zero_iff_dvd] at this
-  show 4 * (Classical.choose this) = d - 1
   exact (Classical.choose_spec this).symm
 
 noncomputable abbrev polyz : ℤ[X] := X ^ 2 - C 1 * X - C (k hd)
@@ -691,7 +657,6 @@ theorem polyz_Monic : (polyz hd).Monic := by
 local notation "γ" => (1 + √-d) / 2
 
 theorem eval_zero : eval₂ (algebraMap ℤ ℂ) γ (polyz hd) = 0 := by
-  unfold polyz
   simp only [algebraMap_int_eq, eq_intCast, Int.cast_one, one_mul, eval₂_sub, eval₂_X_pow,
     eval₂_X]
   conv =>
@@ -792,8 +757,8 @@ private theorem rat_sq_sub_ne_zero (a : ℚ) : a ^ 2 - a - (k hd) ≠ 0 := by
 
 private theorem polyz_irr : Irreducible (polyz hd) := by
   refine Monic.irreducible_of_irreducible_map (algebraMap ℤ ℚ)
-    (polyz hd) (polyz_Monic hd) ?_
-  refine (irreducible_iff_roots_eq_zero_of_degree_le_three ?_ ?_).2 ?_
+    (polyz hd) (polyz_Monic hd) <|
+    (irreducible_iff_roots_eq_zero_of_degree_le_three ?_ ?_).2 ?_
   <;> (try rw [polyq_natDegree hd]); (try omega)
   · refine Multiset.eq_zero_iff_forall_not_mem.2 (fun a ↦ ?_)
     by_contra!
@@ -822,7 +787,7 @@ private theorem base_dim : dim zbase = 2 := by
 private theorem base_equiv_one : adj (base_dim sqf one hd) = δ := by
   have : (finChange.equi (base_dim sqf one hd) 1) =
     ⟨1, by rw [(base_dim sqf one hd)]; omega⟩ := rfl
-  rw [adj, this, basis_eq_pow zbase ⟨1, by rw [(base_dim sqf one hd)]; omega⟩]
+  rw [adj, this, basis_eq_pow zbase _]
   simp only [adjoin.powerBasis_gen, pow_one]
   exact Algebra.adjoin.powerBasis'_gen <| integralz hd
 
@@ -838,36 +803,25 @@ private theorem int_linear_comb (α : Algebra.adjoin ℤ {γ}) :
 private theorem adjoin_mem₆ (α : Algebra.adjoin ℤ {γ}) : α.1 ∈ ℚ⟮√-d⟯ := by
   obtain ⟨r, s, hrs⟩ := int_linear_comb sqf one hd α
   rw [hrs]
-  simp only [one_div, AddMemClass.coe_add, SubringClass.coe_intCast, MulMemClass.coe_mul]
   exact add_mem adjoin_mem₂ <| mul_mem adjoin_mem₂ <|
     div_mem (add_mem (IntermediateField.one_mem _)
       (mem_adjoin_simple_self ℚ _)) adjoin_mem₂
 
 noncomputable abbrev δ' : ℚ⟮√-d⟯ := by
-  refine ⟨γ, div_mem ?_ adjoin_mem₂⟩
-  · refine add_mem ?_ (mem_adjoin_simple_self ℚ _)
-    · convert (@adjoin_mem₂ 1 √-d)
-      exact Rat.cast_one.symm
+  refine ⟨γ, div_mem (add_mem ?_ (mem_adjoin_simple_self ℚ _)) adjoin_mem₂⟩
+  convert (@adjoin_mem₂ 1 √-d)
+  exact Rat.cast_one.symm
 
 private theorem adjoin_of_ring_of_int (x : ℚ⟮√-d⟯) : x.1 ∈ Algebra.adjoin ℤ {γ} →
     x ∈ (integralClosure ℤ ℚ⟮√-d⟯) := by
   intro h
   obtain ⟨r, s, hrs⟩ := int_linear_comb sqf one hd ⟨x, h⟩
-  apply Subtype.val_inj.2 at hrs
-  simp only [AddMemClass.coe_add, SubringClass.coe_intCast, MulMemClass.coe_mul,
-    one_div] at hrs
-  have : x = r + s * (@δ' d) := by
-    apply Subtype.val_inj.1
-    simp only [AddMemClass.coe_add, SubringClass.coe_intCast, MulMemClass.coe_mul,
-      AdjoinSimple.coe_gen, one_div]
-    exact hrs
+  have : x = r + s * (@δ' d) :=
+    Subtype.val_inj.1 (by apply Subtype.val_inj.2 hrs)
   rw [this]
-  refine add_mem ?_ ?_
-  · rw [mem_integralClosure_iff]
-    exact isIntegral_algebraMap
-  · refine mul_mem isIntegral_algebraMap ?_
-    · rw [mem_integralClosure_iff, ← isIntegral_algebraMap_iff (@algMap_inj d)]
-      exact (integralz hd)
+  refine add_mem isIntegral_algebraMap (mul_mem isIntegral_algebraMap ?_)
+  rw [mem_integralClosure_iff, ← isIntegral_algebraMap_iff (@algMap_inj d)]
+  exact (integralz hd)
 
 instance free_mod : Module.Free ℤ (Algebra.adjoin ℤ {γ}) := ⟨⟨Fin (dim zbase), basis zbase⟩⟩
 
@@ -967,23 +921,14 @@ private theorem mat_conv :
   all_goals simp only [Fin.zero_eta, Fin.isValue, Fin.mk_one,
     Matrix.reindexAlgEquiv_apply, Matrix.reindex_apply, Equiv.symm_symm, Matrix.submatrix_apply]
   · rw [Algebra.traceMatrix, Matrix.of_apply, base_equiv_zero (base_dim sqf one hd)]
-    simp only [mul_one, traceMat, Fin.isValue, Matrix.of_apply, Matrix.cons_val',
-      Matrix.cons_val_zero, Matrix.cons_val_fin_one]
     exact traceForm_11 sqf one hd
   · rw [Algebra.traceMatrix, Matrix.of_apply, base_equiv_zero (base_dim sqf one hd), ← adj,
       base_equiv_one sqf one hd]
-    simp only [one_mul, traceMat, Fin.isValue, Matrix.of_apply, Matrix.cons_val',
-      Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val_fin_one, Matrix.cons_val_zero]
     exact traceForm_1δ sqf one hd
   · rw [Algebra.traceMatrix, Matrix.of_apply, base_equiv_zero (base_dim sqf one hd), ← adj,
       base_equiv_one sqf one hd]
-    simp only [mul_one, traceMat, Fin.isValue, Matrix.of_apply, Matrix.cons_val',
-      Matrix.cons_val_zero, Matrix.cons_val_fin_one, Matrix.cons_val_one, Matrix.head_fin_const]
     exact traceForm_δ1 sqf one hd
   · rw [Algebra.traceMatrix, Matrix.of_apply, ← adj, base_equiv_one sqf one hd]
-    simp only [MulMemClass.mk_mul_mk, one_div, traceMat, Fin.isValue,
-      Matrix.of_apply, Matrix.cons_val', Matrix.cons_val_one, Matrix.head_cons,
-      Matrix.cons_val_fin_one, Matrix.head_fin_const]
     exact traceForm_δδ sqf one hd
 
 private theorem discr_z : Algebra.discr ℤ (basis zbase) = d := by
@@ -1009,7 +954,6 @@ theorem ring_of_int (x : ℚ⟮√-d⟯) : x ∈ (integralClosure ℤ ℚ⟮√-
         rw [hn₂]
         exact add_mem adjoin_mem₀ <| mul_mem adjoin_mem₀ adjoin_mem₄
       | 2 =>
-        simp only [Nat.cast_ofNat, Rat.cast_ofNat] at hn₂
         rw [hn₂]
         exact adjoin_mem₅ <| aux_congruent sqf hdvd hn₁
   · exact adjoin_of_ring_of_int sqf one hd x
