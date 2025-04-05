@@ -49,7 +49,7 @@ theorem quadratic.repr (α : S) :
 
 end quadratic
 
-variable {d : ℤ} (sqf : Squarefree d) (one : d ≠ 1)
+variable {d : ℤ} (sqf : Squarefree d)
 
 local notation: max "poly" => X ^ 2 - C (d : ℚ)
 local notation: max "√-" i =>  ((i : ℂ) ^ ((1 / 2) : ℂ))
@@ -74,6 +74,10 @@ theorem minpoly_break {a b c : ℚ} : Polynomial.map (algebraMap ℚ ℂ) minpo(
 
 theorem algMap_inj : Function.Injective (algebraMap ℚ⟮√-d⟯ ℂ) :=
   FaithfulSMul.algebraMap_injective ℚ⟮√-d⟯ ℂ
+
+section nontrivial
+
+variable (one : d ≠ 1)
 
 namespace Q
 
@@ -1040,3 +1044,26 @@ theorem final : NumberField.discr ℚ⟮√-d⟯ = d := by
   exact discr_z sqf one hd
 
 end Z₂
+
+end nontrivial
+
+include sqf in
+theorem quadratic_discr :
+    (  d ≡ 1 [ZMOD 4] → NumberField.discr ℚ⟮√-d⟯ = d) ∧
+    (¬ d ≡ 1 [ZMOD 4] → NumberField.discr ℚ⟮√-d⟯ = 4 * d) := by
+  by_cases one : d ≠ 1
+  · exact ⟨Z₂.final sqf one, Z₁.final sqf one⟩
+  · simp only [ne_eq, Decidable.not_not] at one
+    constructor
+    · intro hcong
+      rw [one, ← discr_rat]
+      refine discr_eq_discr_of_algEquiv _ ?_
+      rw [discr_rat]
+      have : ℚ⟮((1 : ℤ) ^ (1 / 2 : ℂ) : ℂ)⟯ = ⊥ := by
+        rw [← le_bot_iff, adjoin_le_iff]
+        simp only [Int.cast_one, one_div, Complex.one_cpow, Set.singleton_subset_iff,
+          SetLike.mem_coe]
+        exact IntermediateField.one_mem _
+      exact (IntermediateField.equivOfEq this).trans (botEquiv ℚ ℂ)
+    · intro hcong
+      rw [one] at hcong; tauto
