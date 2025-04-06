@@ -13,6 +13,52 @@ import Mathlib.Order.CompletePartialOrder
 import Mathlib.RingTheory.DedekindDomain.Dvr
 import Mathlib.Tactic.Qify
 
+/-!
+# Discriminate of quadratic extensions
+
+This file contains results concerning discriminate of quadratic extensions, i.e.,
+extensions of ℚ of degree 2. It can be easily deduced that any quadratic extension
+can be viewed as an extension of ℚ by the square root of a square free integer.
+
+# Main results
+
+- `quadratic.repr` : Given an `R`-algebra `S`, if there exists a power basis of
+  `S` over `R` with degree 2, then any element of `S` can be expressed as
+  `r + s * adj`, where `r`, `s` in `R` and `adj` standing for the second vector in
+  the power basis.
+
+- `Q.repr` : For any element `α` in `ℚ⟮√d⟯` (`d` a square free integer that is not 1),
+  there exists integers `a`, `b` and natural number `c` such that `α = (a + b * √d) / c`.
+  Whats more, the only integers that divides all `a`, `b`, `c` are units.
+
+- `Q.minpoly_div` : Under the notation of `Q.repr`, the minimal polynomial of `α` divides
+  `X ^ 2 - C ((2 * a : ℚ) / (c : ℚ)) * X + C ((a ^ 2 - (b ^ 2) * d) / (c ^ 2 : ℚ))`.
+  When `α` is not rational, `Q.minpoly_of_not_mem` shows that the above polynomial is
+  precisely the minimal polynomial of `α`.
+
+- `minpoly_of_int` : An element `α` in `ℚ⟮√d⟯` is an algebraic integer iff its polynomial
+  has coefficients in `ℤ`.
+
+- `minpoly_of_int'` : Under the notation of `Q.repr`, if `α` is algebraic integer but not
+  rational, then `c ∣ 2 * a` and `c ^ 2 ∣ a ^ 2 - (b ^ 2) * d`.
+
+- `Z₁.ring_of_int'` : Under the notation of `Q.repr`, when `¬ d ≡ 1 [ZMOD 4]`,
+  the ring of integers of `ℚ⟮√d⟯` (`𝓞 ℚ⟮√d⟯`) is `ℤ`-isomorphic to `ℤ[√d]`.
+
+- `Z₁.final` : Under the notation of `Q.repr`, when `¬ d ≡ 1 [ZMOD 4]`,
+  the discriminate of `ℚ⟮√d⟯` is `4 * d`.
+
+- `Z₂.ring_of_int` : Under the notation of `Q.repr`, when `d ≡ 1 [ZMOD 4]`,
+  the ring of integers of `ℚ⟮√d⟯` (`𝓞 ℚ⟮√d⟯`) is `ℤ`-isomorphic to `ℤ[(1 + √d) / 2]`.
+
+- `Z₂.final` : Under the notation of `Q.repr`, when `d ≡ 1 [ZMOD 4]`,
+  the discriminate of `ℚ⟮√d⟯` is `d`.
+
+- `quadratic_discr` : The discriminate of `ℚ⟮√d⟯` for square free integer `d` is
+  `4 * d` when `¬ d ≡ 1 [ZMOD 4]`, and `d` when `d ≡ 1 [ZMOD 4]`. This relax the condition
+  that `d` is not 1 in `Z₁.final` and `Z₂.final`.
+-/
+
 open IntermediateField Polynomial PowerBasis NumberField
 
 section quadratic
@@ -30,8 +76,6 @@ private theorem base_equiv_zero : (basis base) (finCongr hdim 0) = 1 := by
   have : (finCongr hdim 0) = ⟨0, by rw [← hdim]; omega⟩ := rfl
   rw [this, basis_eq_pow base _]
   simp only [adjoin.powerBasis_gen, pow_zero]
-
-include base
 
 noncomputable abbrev adj := (basis base) (finCongr hdim 1)
 
