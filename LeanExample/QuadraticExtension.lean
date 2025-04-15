@@ -104,7 +104,7 @@ variable {d : ℤ} (sqf : Squarefree d)
 -- Notation for the polynomial `X ^ 2 - d` over ℚ
 local notation: max "poly" => X ^ 2 - C (d : ℚ)
 -- Notation for the complex square root
-local notation: max "√-" i =>  ((i : ℂ) ^ ((1 / 2) : ℂ))
+local notation: max "√[" i "]" =>  ((i : ℂ) ^ ((1 / 2) : ℂ))
 -- Notation for the polynomial `X ^ 2 - (2a / c) X + (a ^ 2 - (b ^ 2) d) / (c ^ 2)` over ℚ
 local notation: max "minpo(" a"," b"," c ")" =>
   X ^ 2 - C ((2 * a : ℚ) / (c : ℚ)) * X + C ((a ^ 2 - (b ^ 2) * d) / (c ^ 2 : ℚ))
@@ -112,7 +112,7 @@ local notation: max "minpo(" a"," b"," c ")" =>
 /-- Factors the polynomial `minpo(a, b, c)` over the complex numbers.
 The roots are `(a ± b√d) / c`. -/
 theorem minpoly_break {a b c : ℚ} : Polynomial.map (algebraMap ℚ ℂ) minpo(a, b, c) =
-    (X - C ((a + b * √-d) / c)) * (X - C ((a - b * √-d) / c)) := by
+    (X - C ((a + b * √[d]) / c)) * (X - C ((a - b * √[d]) / c)) := by
   -- Map polynomial operations over ℂ
   simp only [Polynomial.map_add, Polynomial.map_sub, Polynomial.map_pow, map_X,
     Polynomial.map_mul, map_C, map_div₀, eq_ratCast, Rat.cast_mul, Rat.cast_ofNat,
@@ -129,8 +129,8 @@ theorem minpoly_break {a b c : ℚ} : Polynomial.map (algebraMap ℚ ℂ) minpo(
   ring_nf
 
 /-- The algebra map from the quadratic field `ℚ(√d)` to `ℂ` is injective. -/
-theorem algMap_inj : Function.Injective (algebraMap ℚ⟮√-d⟯ ℂ) :=
-  FaithfulSMul.algebraMap_injective ℚ⟮√-d⟯ ℂ
+theorem algMap_inj : Function.Injective (algebraMap ℚ⟮√[d]⟯ ℂ) :=
+  FaithfulSMul.algebraMap_injective ℚ⟮√[d]⟯ ℂ
 
 section nontrivial
 
@@ -144,25 +144,25 @@ private theorem poly_natDegree : natDegree poly = 2 := natDegree_X_pow_sub_C
 /-- The polynomial `X ^ 2 - d` is monic. -/
 private theorem poly_Monic : Monic poly := by monicity!
 /-- `√d` (as a complex number) is integral over ℚ, witnessed by `poly`. -/
-private theorem integral : IsIntegral ℚ √-d := by
+private theorem integral : IsIntegral ℚ √[d] := by
   refine isAlgebraic_iff_isIntegral.1 ⟨poly, Monic.ne_zero poly_Monic, ?_⟩ -- Use poly
   simp only [one_div, map_intCast, map_sub, map_pow, aeval_X, Complex.cpow_ofNat_inv_pow,
     sub_self] -- Evaluate poly at √d, it's zero
 
 /-- The extension `ℚ(√d)` is finite-dimensional over `ℚ`. -/
-instance : Module.Finite ℚ ℚ⟮√-d⟯ := adjoin.finiteDimensional integral
+instance : Module.Finite ℚ ℚ⟮√[d]⟯ := adjoin.finiteDimensional integral
 /-- `ℚ(√d)` is a number field. -/
-instance : NumberField ℚ⟮√-d⟯ := NumberField.mk
+instance : NumberField ℚ⟮√[d]⟯ := NumberField.mk
 
 -- Power basis `{1, √d}` for `ℚ(√d)` over ℚ
-local notation3 "base" => adjoin.powerBasis integral (x := √-d)
+local notation3 "base" => adjoin.powerBasis integral (x := √[d])
 -- Generator `δ = √d` as an element of `ℚ(√d)`
-local notation3 "δ" => AdjoinSimple.gen ℚ √-d
+local notation3 "δ" => AdjoinSimple.gen ℚ √[d]
 
 /-- The square of the generator `δ` is `d`. -/
 private theorem sqd_sq : δ ^ 2 = d := by
   apply SetLike.coe_eq_coe.1 -- Work with the underlying complex numbers
-  show (√-d) ^ 2 = d
+  show (√[d]) ^ 2 = d
   simp only [one_div, Complex.cpow_ofNat_inv_pow] -- `√d ^ 2 = d`
 
 include one sqf
@@ -198,7 +198,7 @@ private theorem rat_sq_sub_ne_zero (a : ℚ) : a ^ 2 - d ≠ 0 := by
   exact one h.symm -- This contradicts `d ≠ 1`
 
 /-- `√d` is not a rational number (since `d` is square-free and not 1). -/
-private theorem sqrt_d_not_mem : (√-d) ∉ (algebraMap ℚ ℂ).range := by
+private theorem sqrt_d_not_mem : √[d] ∉ (algebraMap ℚ ℂ).range := by
   rintro ⟨x, hx⟩ -- Assume `√d = x` for some `x ∈ ℚ`
   absurd rat_sq_sub_ne_zero sqf one x -- This leads to a contradiction
   apply_fun (· ^ 2) at hx -- Square both sides: `d = x ^ 2`
@@ -218,7 +218,7 @@ private theorem poly_irr : Irreducible poly := by
     exact (rat_sq_sub_ne_zero sqf one a) this.2 -- Contradicts previous lemma
 
 /-- The minimal polynomial of `√d` over `ℚ` is `X ^ 2 - d`. -/
-private theorem poly_min : minpoly ℚ (√-d) = poly := by
+private theorem poly_min : minpoly ℚ √[d] = poly := by
   -- Minimal polynomial is the unique monic irreducible polynomial with the element as a root.
   refine (minpoly.eq_of_irreducible_of_monic (poly_irr sqf one) ?_ poly_Monic).symm
   -- Show `√d` is a root of `poly`
@@ -227,7 +227,7 @@ private theorem poly_min : minpoly ℚ (√-d) = poly := by
 
 /-- The dimension of the power basis `base` (i.e., the degree of the extension) is 2. -/
 private theorem base_dim : 2 = dim base :=
-  have : Module.finrank ℚ ℚ⟮√-d⟯ = 2 :=
+  have : Module.finrank ℚ ℚ⟮√[d]⟯ = 2 :=
     -- Finrank is the degree of the minimal polynomial
     poly_natDegree ▸ poly_min sqf one ▸ adjoin.finrank integral
   this ▸ finrank base -- Power basis dimension equals field extension degree
@@ -240,13 +240,13 @@ private theorem base_equiv_one : adj (base_dim sqf one) = δ := by
   simp only [adjoin.powerBasis_gen, pow_one] -- `gen ^ 1 = gen = δ`
 
 /-- Any element `α` in `ℚ(√d)` can be written as `r + s * √d` with `r, s ∈ ℚ`. -/
-private theorem linear_comb (α : ℚ⟮√-d⟯) : ∃ r s : ℚ, α = r + s * δ := by
+private theorem linear_comb (α : ℚ⟮√[d]⟯) : ∃ r s : ℚ, α = r + s * δ := by
   have := quadratic.repr (base_dim sqf one) α -- Apply general quadratic representation
   rwa [base_equiv_one sqf one] at this -- Substitute the generator
 
 /-- Any element `α` in `ℚ(√d)` can be written as `(a + b * √d) / c` with
 `a, b ∈ ℤ`, `c ∈ ℕ`, `c ≠ 0`. -/
-private theorem int_linear_comb (α : ℚ⟮√-d⟯) :
+private theorem int_linear_comb (α : ℚ⟮√[d]⟯) :
     ∃ a b : ℤ, ∃ c : ℕ, α = (a + b * δ) / (c : ℚ) ∧ c ≠ 0 := by
   obtain ⟨r, s, hrs⟩ := linear_comb sqf one α -- Get `r, s ∈ ℚ`
   rw [← Rat.num_div_den r, ← Rat.num_div_den s] at hrs -- Write `r, s` as fractions
@@ -261,7 +261,7 @@ private theorem int_linear_comb (α : ℚ⟮√-d⟯) :
 
 /-- Representation of `α ∈ ℚ(√d)` as `(a + b√d) / c` where `a, b ∈ ℤ`, `c ∈ ℕ`, `c ≠ 0`,
 and `gcd(a, b, c) = 1` (i.e., no integer other than `±1` divides all three). -/
-private theorem repr (α : ℚ⟮√-d⟯) : ∃ a b : ℤ, ∃ c : ℕ,
+private theorem repr (α : ℚ⟮√[d]⟯) : ∃ a b : ℤ, ∃ c : ℕ,
     α = (a + b * δ) / (c : ℚ) ∧
     c ≠ 0 ∧
     ∀ n : ℤ, n ∣ a ∧ n ∣ b ∧ n ∣ c → IsUnit n := by
@@ -287,7 +287,7 @@ private theorem repr (α : ℚ⟮√-d⟯) : ∃ a b : ℤ, ∃ c : ℕ,
     have : (a' + b' * δ) / (c'' : ℚ) = e * (a' + b' * δ) / (e * (c'' : ℚ)) := by
       -- Multiply numerator and denominator by `e` (as rationals)
       ring_nf
-      rw [mul_assoc _ (e : ℚ⟮√-d⟯) _, mul_assoc _ (e : ℚ⟮√-d⟯) _,
+      rw [mul_assoc _ (e : ℚ⟮√[d]⟯) _, mul_assoc _ (e : ℚ⟮√[d]⟯) _,
         mul_inv_cancel₀ <| Nat.cast_ne_zero.mpr e_ne_zero, mul_one, mul_one]
     have foo : @Nat.cast ℚ Rat.instNatCast c'' = @Int.cast ℚ Rat.instIntCast c' :=
       Rat.ext hc'' rfl -- Cast `c''` to ℚ matches cast `c'` to ℚ
@@ -321,7 +321,7 @@ private theorem repr (α : ℚ⟮√-d⟯) : ∃ a b : ℤ, ∃ c : ℕ,
 /-- For any `x ∈ ℚ(√d)`, its minimal polynomial over `ℚ` divides the polynomial
 `minpo(a, b, c) = X ^ 2 - (2a / c) X + (a ^ 2 - (b ^ 2) d) / (c ^ 2)`,
 where `x = (a + b√d) / c` is the representation with `gcd(a, b, c) = 1`. -/
-theorem minpoly_div (x : ℚ⟮√-d⟯) : ∃ a b : ℤ, ∃ c : ℕ,
+theorem minpoly_div (x : ℚ⟮√[d]⟯) : ∃ a b : ℤ, ∃ c : ℕ,
     minpoly ℚ x ∣ minpo(a, b, c) ∧
     c ≠ 0 ∧
     (∀ n : ℤ, n ∣ a ∧ n ∣ b ∧ n ∣ c → IsUnit n) ∧
@@ -336,7 +336,7 @@ theorem minpoly_div (x : ℚ⟮√-d⟯) : ∃ a b : ℤ, ∃ c : ℕ,
 
 /-- If `x ∈ ℚ(√d)` is not rational (i.e., `b ≠ 0` in the representation), then its minimal
 polynomial over `ℚ` *is* `minpo(a, b, c)`. -/
-private theorem minpoly_of_not_mem {x : ℚ⟮√-d⟯} : x ∉ (algebraMap ℚ ℚ⟮√-d⟯).range →
+private theorem minpoly_of_not_mem {x : ℚ⟮√[d]⟯} : x ∉ (algebraMap ℚ ℚ⟮√[d]⟯).range →
   ∃ (r : Σ (_ : ℤ) (_ : ℤ), ℕ),
     minpoly ℚ x = minpo(r.1, r.2.1, r.2.2) ∧
     r.2.2 ≠ 0 ∧
@@ -356,12 +356,12 @@ private theorem minpoly_of_not_mem {x : ℚ⟮√-d⟯} : x ∉ (algebraMap ℚ 
 
 /-- Calculates the coefficients `(a, b, c)` such that `minpoly ℚ x = minpo(a, b, c)`
 for a non-rational element `x`. -/
-noncomputable def calc_min {x : ℚ⟮√-d⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮√-d⟯).range) :
+noncomputable def calc_min {x : ℚ⟮√[d]⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮√[d]⟯).range) :
     Σ (_ : ℤ) (_ : ℤ), ℕ :=
   Classical.choose <| minpoly_of_not_mem sqf one hx
 
 /-- The properties satisfied by the coefficients `(a, b, c)` returned by `calc_min`. -/
-theorem calc_min_prop {x : ℚ⟮√-d⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮√-d⟯).range) :
+theorem calc_min_prop {x : ℚ⟮√[d]⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮√[d]⟯).range) :
   minpoly ℚ x =
     minpo((calc_min sqf one hx).1, (calc_min sqf one hx).2.1, (calc_min sqf one hx).2.2) ∧
   (calc_min sqf one hx).2.2 ≠ 0 ∧
@@ -378,11 +378,11 @@ section aux -- Auxiliary lemmas for integrality conditions
 /-- An element `x` in a number field `K` is an algebraic integer iff its minimal polynomial
 over `ℚ` has integer coefficients when viewed as a polynomial over `ℚ`.
 (More precisely, `minpoly ℚ x` is the image of `minpoly ℤ x` under `map (algebraMap ℤ ℚ)`). -/
-theorem minpoly_of_int (x : ℚ⟮√-d⟯) : x ∈ (integralClosure ℤ ℚ⟮√-d⟯) ↔
+theorem minpoly_of_int (x : ℚ⟮√[d]⟯) : x ∈ (integralClosure ℤ ℚ⟮√[d]⟯) ↔
     minpoly ℚ x = Polynomial.map (algebraMap ℤ ℚ) (minpoly ℤ x) := by
   constructor
   -- Forward direction: If `x` is integral, this property holds.
-  · exact minpoly.isIntegrallyClosed_eq_field_fractions ℚ (ℚ⟮√-d⟯)
+  · exact minpoly.isIntegrallyClosed_eq_field_fractions ℚ (ℚ⟮√[d]⟯)
   -- Backward direction: If the poly has ℤ coeffs, then `x` is integral.
   · intro hx
     -- The minimal polynomial over ℤ exists and is monic by definition if the condition holds.
@@ -502,8 +502,8 @@ theorem congruent {a b : ℤ}
 
 /-- If `x = (a + b√d) / c` (with `gcd = 1`) is an algebraic integer and not rational,
 then `c` must divide `2`, and `c ^ 2` must divide `a ^ 2 - (b ^ 2) d`. -/
-theorem minpoly_of_int' {x : ℚ⟮√-d⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮√-d⟯).range)
-    (h : x ∈ (integralClosure ℤ ℚ⟮√-d⟯)) :
+theorem minpoly_of_int' {x : ℚ⟮√[d]⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮√[d]⟯).range)
+    (h : x ∈ (integralClosure ℤ ℚ⟮√[d]⟯)) :
   (Q.calc_min sqf one hx).2.2 ∣ 2 ∧
   ((Q.calc_min sqf one hx).2.2 : ℤ) ^ 2 ∣
     (Q.calc_min sqf one hx).1 ^ 2 - (Q.calc_min sqf one hx).2.1 ^ 2 * d := by
@@ -545,8 +545,8 @@ private theorem adjoin_mem₀ {a : ℤ} {c : ℂ}: (a : ℂ) ∈ Algebra.adjoin 
 
 /-- If `x ∈ ℚ` is an algebraic integer, then `x ∈ ℤ`.
 So `x` (as a complex number) is in `Algebra.adjoin ℤ {c}` for any `c`. -/
-theorem adjoin_mem₁ {x : ℚ⟮√-d⟯} {c : ℂ} (hx : x ∈ (algebraMap ℚ ℚ⟮√-d⟯).range)
-    (h : x ∈ (integralClosure ℤ ℚ⟮√-d⟯)) : x.1 ∈ Algebra.adjoin ℤ {c} := by
+theorem adjoin_mem₁ {x : ℚ⟮√[d]⟯} {c : ℂ} (hx : x ∈ (algebraMap ℚ ℚ⟮√[d]⟯).range)
+    (h : x ∈ (integralClosure ℤ ℚ⟮√[d]⟯)) : x.1 ∈ Algebra.adjoin ℤ {c} := by
   rw [minpoly_of_int] at h -- `minpoly ℚ x` has ℤ coeffs
   -- If `x` is rational, its minimal polynomial has degree 1.
   have minpoly_deg := minpoly.natDegree_eq_one_iff.2 hx
@@ -565,8 +565,8 @@ theorem adjoin_mem₂ {a : ℚ} {c : ℂ}: (a : ℂ) ∈ ℚ⟮c⟯ := by
   · simp only [Set.mem_range, eq_ratCast, Rat.cast_inj, exists_eq] -- `a` is in the image of ℚ
 
 /-- If `x = a + b√d` (i.e., `c = 1`) is an integer, then `x ∈ ℤ[√d]`. -/
-theorem adjoin_mem₃ {x : ℚ⟮√-d⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮√-d⟯).range)
-    (hone : (Q.calc_min sqf one hx).2.2 = 1) : x.1 ∈ Algebra.adjoin ℤ {√-d} := by
+theorem adjoin_mem₃ {x : ℚ⟮√[d]⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮√[d]⟯).range)
+    (hone : (Q.calc_min sqf one hx).2.2 = 1) : x.1 ∈ Algebra.adjoin ℤ {√[d]} := by
   -- Get the representation and minimal polynomial
   obtain ⟨hmin, -, -⟩ := Q.calc_min_prop sqf one hx
   -- Map the minimal polynomial equation to ℂ
@@ -583,10 +583,10 @@ theorem adjoin_mem₃ {x : ℚ⟮√-d⟯} (hx : x ∉ (algebraMap ℚ ℚ⟮√
   rcases hmin with hx₁ | hx₁ <;> rw [sub_eq_zero.1 hx₁]
   · -- Case `x = a + b√d`
     refine add_mem adjoin_mem₀ <| mul_mem adjoin_mem₀ ?_ -- `a ∈ ℤ[√d], b ∈ ℤ[√d]`
-    simpa only [one_div] using Algebra.self_mem_adjoin_singleton ℤ √-d -- `√d ∈ ℤ[√d]`
+    simpa only [one_div] using Algebra.self_mem_adjoin_singleton ℤ √[d] -- `√d ∈ ℤ[√d]`
   · -- Case `x = a - b√d`
     refine sub_mem adjoin_mem₀ <| mul_mem adjoin_mem₀ ?_
-    simpa only [one_div] using Algebra.self_mem_adjoin_singleton ℤ √-d
+    simpa only [one_div] using Algebra.self_mem_adjoin_singleton ℤ √[d]
 
 end aux
 
@@ -601,7 +601,7 @@ private theorem polyz_natDegree : natDegree polyz = 2 := natDegree_X_pow_sub_C
 private theorem polyz_Monic : Monic polyz := by monicity!
 
 /-- `√d` is integral over ℤ, witnessed by `polyz`. -/
-theorem integralz : IsIntegral ℤ √-d := by
+theorem integralz : IsIntegral ℤ √[d] := by
   refine ⟨polyz, ⟨polyz_Monic, ?_⟩⟩
   · simp only [algebraMap_int_eq, one_div, eq_intCast, eval₂_sub, eval₂_X_pow,
     Complex.cpow_ofNat_inv_pow] -- Evaluate `polyz` at `√d`
@@ -613,7 +613,7 @@ theorem integralz : IsIntegral ℤ √-d := by
 local notation3 "zbase" => Algebra.adjoin.powerBasis' (@integralz d)
 
 /-- The degree of the minimal polynomial of `√d` over `ℤ` is at most 2. -/
-private theorem min_polyz_natDegree_le : (minpoly ℤ √-d).natDegree ≤ 2 := by
+private theorem min_polyz_natDegree_le : (minpoly ℤ √[d]).natDegree ≤ 2 := by
   rw [← @polyz_natDegree d] -- Use `polyz` degree
   -- minpoly divides `polyz`
   refine natDegree_le_of_dvd ?_ (X_pow_sub_C_ne_zero (Nat.zero_lt_two) d)
@@ -622,13 +622,13 @@ private theorem min_polyz_natDegree_le : (minpoly ℤ √-d).natDegree ≤ 2 := 
     map_intCast, sub_self]
 
 /-- The generator `√d` as an element of the ℤ-algebra `ℤ[√d]`. -/
-noncomputable abbrev δ : Algebra.adjoin ℤ {√-d} :=
-  ⟨√-d, SetLike.mem_coe.1 <| Algebra.subset_adjoin <| Set.mem_singleton √-d⟩
+noncomputable abbrev δ : Algebra.adjoin ℤ {√[d]} :=
+  ⟨√[d], SetLike.mem_coe.1 <| Algebra.subset_adjoin <| Set.mem_singleton √[d]⟩
 
 /-- `δ ^ 2 = d` in the ring `ℤ[√d]`. -/
 private theorem sqd_sq : (@δ d) ^ 2 = d := by
   apply SetLike.coe_eq_coe.1 -- Work with underlying complex numbers
-  show (√-d) ^ 2 = d
+  show √[d] ^ 2 = d
   simp only [one_div, Complex.cpow_ofNat_inv_pow]
 
 include sqf one
@@ -644,12 +644,12 @@ private theorem irr_polyz : Irreducible polyz := by
     Polynomial.map_intCast, map_intCast] -- Check map `ℤ → ℚ` gives the right polynomial
 
 /-- The degree of the minimal polynomial of `√d` over `ℤ` is exactly 2. -/
-private theorem min_polyz_natDegree : (minpoly ℤ √-d).natDegree = 2 := by
+private theorem min_polyz_natDegree : (minpoly ℤ √[d]).natDegree = 2 := by
   refine le_antisymm min_polyz_natDegree_le ?_ -- We know ≤ 2, need ≥ 2
   -- Degree is ≥ 2 iff the element is not in the base ring (ℤ).
   -- We map to ℂ and check it's not rational.
   rw [minpoly.two_le_natDegree_iff (@integralz d)]
-  rintro ⟨x, hx : (algebraMap ℚ ℂ) x = √-d⟩ -- Assume `√d` is rational
+  rintro ⟨x, hx : (algebraMap ℚ ℂ) x = √[d]⟩ -- Assume `√d` is rational
   have := Q.sqrt_d_not_mem sqf one -- We know `√d` is not rational
   rw [← hx] at this
   exact this <| RingHom.mem_range_self (algebraMap ℚ ℂ) x -- Contradiction
@@ -667,7 +667,7 @@ private theorem base_equiv_one : adj (base_dim sqf one) = δ := by
   exact Algebra.adjoin.powerBasis'_gen integralz -- Generator of basis is the element itself
 
 /-- Any element `α` in `ℤ[√d]` can be written as `r + s * √d` with `r, s ∈ ℤ`. -/
-private theorem int_linear_comb (α : Algebra.adjoin ℤ {√-d}) :
+private theorem int_linear_comb (α : Algebra.adjoin ℤ {√[d]}) :
     ∃ r s : ℤ, α = r + s * (@δ d) := by
   have := quadratic.repr (base_dim sqf one) α -- Apply general quadratic representation over ℤ
   rw [base_equiv_one sqf one] at this -- Substitute the generator
@@ -676,7 +676,7 @@ private theorem int_linear_comb (α : Algebra.adjoin ℤ {√-d}) :
   simp only [MulMemClass.coe_mul, SubringClass.coe_intCast, one_div]
 
 /-- Elements of `ℤ[√d]` (viewed as complex numbers) are contained in `ℚ(√d)`. -/
-private theorem adjoin_mem₄ (α : Algebra.adjoin ℤ {√-d}) : α.1 ∈ ℚ⟮√-d⟯ := by
+private theorem adjoin_mem₄ (α : Algebra.adjoin ℤ {√[d]}) : α.1 ∈ ℚ⟮√[d]⟯ := by
   obtain ⟨r, s, hrs⟩ := int_linear_comb sqf one α -- Get `r, s ∈ ℤ` representation
   rw [hrs] -- Substitute
   -- Map to ℂ
@@ -685,35 +685,35 @@ private theorem adjoin_mem₄ (α : Algebra.adjoin ℤ {√-d}) : α.1 ∈ ℚ�
   exact add_mem adjoin_mem₂ <| mul_mem adjoin_mem₂ <| mem_adjoin_simple_self ℚ _
 
 /-- Elements of `ℤ[√d]` are algebraic integers in `ℚ(√d)`. -/
-private theorem adjoin_of_ring_of_int (x : ℚ⟮√-d⟯) (h : x.1 ∈ Algebra.adjoin ℤ {√-d}) :
-    x ∈ (integralClosure ℤ ℚ⟮√-d⟯) := by
+private theorem adjoin_of_ring_of_int (x : ℚ⟮√[d]⟯) (h : x.1 ∈ Algebra.adjoin ℤ {√[d]}) :
+    x ∈ (integralClosure ℤ ℚ⟮√[d]⟯) := by
   -- Represent `x` as `r + sδ` with `r, s ∈ ℤ`
   obtain ⟨r, s, hrs⟩ := int_linear_comb sqf one ⟨x, h⟩
-  have : x = r + s * (AdjoinSimple.gen ℚ √-d) :=
+  have : x = r + s * (AdjoinSimple.gen ℚ √[d]) :=
     Subtype.val_inj.1 <| by apply Subtype.val_inj.2 hrs -- Match types
   rw [this]
   -- Integers `r, s` are integral. `δ = √d` is integral (`integralz`).
   -- The integral closure is a ring, so `r + sδ` is integral.
   refine add_mem isIntegral_algebraMap <| mul_mem isIntegral_algebraMap ?_
   rw [mem_integralClosure_iff, ← isIntegral_algebraMap_iff (@algMap_inj d),
-    AdjoinSimple.algebraMap_gen ℚ (√-d)] -- Check if `AdjoinSimple.gen` is integral
+    AdjoinSimple.algebraMap_gen ℚ √[d]] -- Check if `AdjoinSimple.gen` is integral
   exact integralz -- Yes, `√d` is integral over ℤ
 
 /-- `ℤ[√d]` is a free ℤ-module of rank 2. -/
-instance : Module.Free ℤ (Algebra.adjoin ℤ {√-d}) := ⟨⟨Fin (dim zbase), basis zbase⟩⟩
+instance : Module.Free ℤ (Algebra.adjoin ℤ {√[d]}) := ⟨⟨Fin (dim zbase), basis zbase⟩⟩
 
 -- Calculate entries of the trace matrix for the basis `{1, √d}`
 /-- `Trace(1 * 1) = Trace(1) = 2`. -/
 private theorem traceForm_11 :
-    Algebra.traceForm ℤ (Algebra.adjoin ℤ {√-d}) 1 1 = 2 := by
+    Algebra.traceForm ℤ (Algebra.adjoin ℤ {√[d]}) 1 1 = 2 := by
   rw [Algebra.traceForm_apply, one_mul, -- Def of trace form
-    ← @algebraMap.coe_one ℤ (Algebra.adjoin ℤ {√-d}) .., -- `1 = algebraMap 1`
+    ← @algebraMap.coe_one ℤ (Algebra.adjoin ℤ {√[d]}) .., -- `1 = algebraMap 1`
     Algebra.trace_algebraMap, finrank zbase, -- `Trace(algebraMap r) = dim * r`
     ← base_dim sqf one, nsmul_eq_mul, Nat.cast_ofNat, mul_one] -- `dim = 2`
 
 /-- `Trace(1 * δ) = Trace(δ) = 0`. -/
 private theorem traceForm_1δ :
-    Algebra.traceForm ℤ (Algebra.adjoin ℤ {√-d}) 1 δ = 0 := by
+    Algebra.traceForm ℤ (Algebra.adjoin ℤ {√[d]}) 1 δ = 0 := by
   rw [Algebra.traceForm_apply, one_mul, Algebra.trace_eq_matrix_trace (basis zbase)
     δ, Matrix.trace, finChange (base_dim sqf one)] -- Use matrix trace definition
   -- Sum diagonal entries
@@ -733,8 +733,8 @@ private theorem traceForm_1δ :
   -- Calculate `M₁₁ = (repr (δ * δ))₁`
   rw [← adj, base_equiv_one sqf one, ← sq, sqd_sq] -- `δ * δ = d`
   -- Need `(repr d)₁`. Since `d = d * 1 + 0 * δ`, `(repr d)₁ = 0`.
-  have cast : @Int.cast (Algebra.adjoin ℤ {√-d}) AddGroupWithOne.toIntCast d =
-    ((algebraMap ℤ (Algebra.adjoin ℤ {√-d})) d) * 1 := by -- `d = d * 1`
+  have cast : @Int.cast (Algebra.adjoin ℤ {√[d]}) AddGroupWithOne.toIntCast d =
+    ((algebraMap ℤ (Algebra.adjoin ℤ {√[d]})) d) * 1 := by -- `d = d * 1`
       rw [algebraMap_int_eq, eq_intCast, mul_one]
   replace this := Basis.repr_self_apply (basis zbase)
     (finCongr (base_dim sqf one) 0) -- Basis element 1
@@ -746,13 +746,13 @@ private theorem traceForm_1δ :
 
 /-- `Trace(δ * 1) = Trace(δ) = 0`. -/
 private theorem traceForm_δ1 :
-    Algebra.traceForm ℤ (Algebra.adjoin ℤ {√-d}) δ 1 = 0 := by
+    Algebra.traceForm ℤ (Algebra.adjoin ℤ {√[d]}) δ 1 = 0 := by
   -- via symmetric
   simpa only [Algebra.traceForm_apply, mul_one, one_mul] using traceForm_1δ sqf one
 
 /-- `Trace(δ * δ) = Trace(d) = 2d`. -/
 private theorem traceForm_δδ :
-    Algebra.traceForm ℤ (Algebra.adjoin ℤ {√-d}) δ δ = 2 * d := by
+    Algebra.traceForm ℤ (Algebra.adjoin ℤ {√[d]}) δ δ = 2 * d := by
   rw [Algebra.traceForm_apply, ← sq, sqd_sq,
     Algebra.trace_eq_matrix_trace (basis zbase) d,
     Matrix.trace, finChange (base_dim sqf one)]
@@ -768,15 +768,15 @@ private theorem traceForm_δδ :
     (finCongr (base_dim sqf one) 0) -- Index 0
   -- `(repr 1)₀ = 1`
   rw [ite_cond_eq_true _ _ (eq_self (finCongr (base_dim sqf one) 0))] at this
-  have cast : @Int.cast (Algebra.adjoin ℤ {√-d}) AddGroupWithOne.toIntCast d =
-    ((algebraMap ℤ (Algebra.adjoin ℤ {√-d})) d) * 1 := by -- `d = d * 1`
+  have cast : @Int.cast (Algebra.adjoin ℤ {√[d]}) AddGroupWithOne.toIntCast d =
+    ((algebraMap ℤ (Algebra.adjoin ℤ {√[d]})) d) * 1 := by -- `d = d * 1`
       rw [algebraMap_int_eq, eq_intCast, mul_one]
   nth_rw 1 [cast]
   -- `(repr d)₀ = d * (repr 1)₀ = d`
   rw [Basis.repr_smul', ← base_equiv_zero (base_dim sqf one), this, mul_one]
   -- Calculate `M₁₁ = (repr (d * δ))₁`
-  replace cast : @Int.cast (Algebra.adjoin ℤ {√-d}) AddGroupWithOne.toIntCast d =
-    ((algebraMap ℤ (Algebra.adjoin ℤ {√-d})) d) := by -- Cast `d`
+  replace cast : @Int.cast (Algebra.adjoin ℤ {√[d]}) AddGroupWithOne.toIntCast d =
+    ((algebraMap ℤ (Algebra.adjoin ℤ {√[d]})) d) := by -- Cast `d`
       rw [algebraMap_int_eq, eq_intCast]
   replace this := Basis.repr_self_apply (basis zbase)
     (finCongr (base_dim sqf one) 1) -- Basis element `δ`
@@ -821,11 +821,11 @@ variable (hd : ¬ d ≡ 1 [ZMOD 4])
 include hd
 
 /-- The ring of integers of `ℚ(√d)` is `ℤ[√d]` when `¬ (d ≡ 1 [ZMOD 4])`. -/
-theorem ring_of_int (x : ℚ⟮√-d⟯) : x ∈ (integralClosure ℤ ℚ⟮√-d⟯) ↔
-  x.1 ∈ Algebra.adjoin ℤ {√-d} := by
+theorem ring_of_int (x : ℚ⟮√[d]⟯) : x ∈ (integralClosure ℤ ℚ⟮√[d]⟯) ↔
+  x.1 ∈ Algebra.adjoin ℤ {√[d]} := by
   constructor
   · intro h -- Assume `x` is an integer
-    by_cases hx : x ∈ (algebraMap ℚ ℚ⟮√-d⟯).range -- Case 1: `x` is rational
+    by_cases hx : x ∈ (algebraMap ℚ ℚ⟮√[d]⟯).range -- Case 1: `x` is rational
     · exact adjoin_mem₁ hx h -- Rational integer is in ℤ, hence in ℤ[√d]
     · -- Case 2: `x` is not rational. Use `x = (a + b√d) / c` representation.
       -- `c ∣ 2` and `c ^ 2 ∣ a ^ 2 - (b ^ 2) d`
@@ -844,7 +844,7 @@ theorem ring_of_int (x : ℚ⟮√-d⟯) : x ∈ (integralClosure ℤ ℚ⟮√-
 
 /-- The ring of integers `𝓞 ℚ(√d)` is ℤ-algebra isomorphic to `ℤ[√d]`
 when `¬ (d ≡ 1 [ZMOD 4])`. -/
-noncomputable def ring_of_int' : 𝓞 ℚ⟮√-d⟯ ≃ₐ[ℤ] Algebra.adjoin ℤ {√-d} where
+noncomputable def ring_of_int' : 𝓞 ℚ⟮√[d]⟯ ≃ₐ[ℤ] Algebra.adjoin ℤ {√[d]} where
   toFun x := ⟨x, (ring_of_int sqf one hd x).1 x.2⟩ -- Map integer `x` to itself in ℤ[√d]
   invFun y := ⟨⟨y.1, adjoin_mem₄ sqf one y⟩, -- Map `y ∈ ℤ[√d]` to `⟨y.1, _⟩` in `𝓞 ℚ(√d)`
     (ring_of_int sqf one hd ⟨y.1, adjoin_mem₄ sqf one y⟩).2 y.2⟩ -- Proof it's an integer
@@ -859,10 +859,10 @@ noncomputable abbrev intbase :=
   PowerBasis.map zbase (ring_of_int' sqf one hd).symm
 
 /-- The discriminant of `ℚ(√d)` is `4d` when `¬ (d ≡ 1 [ZMOD 4])`. -/
-theorem final : NumberField.discr ℚ⟮√-d⟯ = 4 * d := by
+theorem final : NumberField.discr ℚ⟮√[d]⟯ = 4 * d := by
   -- Discriminant is invariant under isomorphism, use the basis for ℤ[√d].
   -- Use basis mapped from `zbase`
-  rw [← discr_eq_discr ℚ⟮√-d⟯ (intbase sqf one hd).basis, intbase]
+  rw [← discr_eq_discr ℚ⟮√[d]⟯ (intbase sqf one hd).basis, intbase]
   simp only [map_dim, map_basis] -- Properties of `PowerBasis.map`
   have : (basis zbase).map (ring_of_int' sqf one hd).symm.toLinearEquiv =
     (ring_of_int' sqf one hd).symm ∘ (basis zbase) := by
@@ -895,7 +895,7 @@ theorem polyz_Monic : (polyz d).Monic := by
   unfold polyz; monicity!
 
 -- The generator for this case
-local notation "γ" => (1 + √-d) / 2
+local notation "γ" => (1 + √[d]) / 2
 
 include hd in
 /-- Property defining `k`: `4k = d - 1`. -/
@@ -925,8 +925,8 @@ theorem eval_zero : eval₂ (algebraMap ℤ ℂ) γ (polyz d) = 0 := by
   exact (mul_eq_zero_iff_right (OfNat.zero_ne_ofNat 4).symm).1 this -- Result is zero
 
 /-- The element `√d` is contained in `ℤ[γ]`. Specifically, `√d = 2γ - 1`. -/
-private theorem adjoin_mem₄ : (AdjoinSimple.gen ℚ (√-d)).1 ∈ Algebra.adjoin ℤ {γ} := by
-  suffices (AdjoinSimple.gen ℚ (√-d)).1 = 2 * γ - 1 from by -- Check relation
+private theorem adjoin_mem₄ : (AdjoinSimple.gen ℚ (√[d])).1 ∈ Algebra.adjoin ℤ {γ} := by
+  suffices (AdjoinSimple.gen ℚ (√[d])).1 = 2 * γ - 1 from by -- Check relation
     rw [this]
     -- `2γ - 1 ∈ ℤ[γ]` because `2 ∈ ℤ, γ ∈ ℤ[γ], 1 ∈ ℤ`.
     refine sub_mem (mul_mem adjoin_mem₀ <| Algebra.self_mem_adjoin_singleton ℤ _) ?_
@@ -938,7 +938,7 @@ private theorem adjoin_mem₄ : (AdjoinSimple.gen ℚ (√-d)).1 ∈ Algebra.adj
 
 /-- If `a, b` are odd, then `(a + b√d) / 2` is in `ℤ[γ]`. -/
 private theorem adjoin_mem₅ {a b : ℤ} (hodd : Odd a ∧ Odd b) :
-    (a + b * (AdjoinSimple.gen ℚ (√-d)).1) / 2 ∈ Algebra.adjoin ℤ {γ} := by
+    (a + b * (AdjoinSimple.gen ℚ (√[d])).1) / 2 ∈ Algebra.adjoin ℤ {γ} := by
   -- Write `a = 2k₁ + 1, b = 2k₂ + 1`
   obtain ⟨⟨k₁, ka⟩, ⟨k₂, kb⟩⟩ := hodd
   rw [ka, kb] -- Substitute
@@ -1093,7 +1093,7 @@ private theorem int_linear_comb (α : Algebra.adjoin ℤ {γ}) :
   exact hd
 
 /-- Elements of `ℤ[γ]` (viewed as complex numbers) are contained in `ℚ(√d)`. -/
-private theorem adjoin_mem₆ (α : Algebra.adjoin ℤ {γ}) : α.1 ∈ ℚ⟮√-d⟯ := by
+private theorem adjoin_mem₆ (α : Algebra.adjoin ℤ {γ}) : α.1 ∈ ℚ⟮√[d]⟯ := by
   obtain ⟨r, s, hrs⟩ := int_linear_comb sqf one hd α -- Get `r, s ∈ ℤ` representation
   rw [hrs]
   -- `γ = (1 + √d) / 2`. `1 ∈ ℚ(√d), √d ∈ ℚ(√d), 2 ∈ ℚ`. So `γ ∈ ℚ(√d)`.
@@ -1102,15 +1102,15 @@ private theorem adjoin_mem₆ (α : Algebra.adjoin ℤ {γ}) : α.1 ∈ ℚ⟮�
       (mem_adjoin_simple_self ℚ _)) adjoin_mem₂
 
 /-- `γ` viewed as an element of `ℚ(√d)`. -/
-noncomputable abbrev δ' : ℚ⟮√-d⟯ := by
+noncomputable abbrev δ' : ℚ⟮√[d]⟯ := by
   -- Check `γ ∈ ℚ(√d)`
   refine ⟨γ, div_mem (add_mem ?_ (mem_adjoin_simple_self ℚ _)) adjoin_mem₂⟩
-  convert (@adjoin_mem₂ 1 √-d) -- Check `1 ∈ ℚ(√d)`
+  convert (@adjoin_mem₂ 1 √[d]) -- Check `1 ∈ ℚ(√d)`
   exact Rat.cast_one.symm
 
 /-- Elements of `ℤ[γ]` are algebraic integers in `ℚ(√d)`. -/
-private theorem adjoin_of_ring_of_int (x : ℚ⟮√-d⟯) (h : x.1 ∈ Algebra.adjoin ℤ {γ}) :
-    x ∈ (integralClosure ℤ ℚ⟮√-d⟯) := by
+private theorem adjoin_of_ring_of_int (x : ℚ⟮√[d]⟯) (h : x.1 ∈ Algebra.adjoin ℤ {γ}) :
+    x ∈ (integralClosure ℤ ℚ⟮√[d]⟯) := by
   -- Represent `x = r + sδ` (`δ = γ` here)
   obtain ⟨r, s, hrs⟩ := int_linear_comb sqf one hd ⟨x, h⟩
   have : x = r + s * (@δ' d) := -- Match types
@@ -1270,11 +1270,11 @@ private theorem discr_z : Algebra.discr ℤ (basis zbase) = d := by
     mul_add, mul_one, mul_one, ← mul_assoc, show (2 : ℤ) * 2 = 4 by rfl, hk hd]; group
 
 /-- The ring of integers of `ℚ(√d)` is `ℤ[γ]` = `ℤ[(1 + √d) / 2]` when `d ≡ 1 [ZMOD 4]`. -/
-theorem ring_of_int (x : ℚ⟮√-d⟯) : x ∈ (integralClosure ℤ ℚ⟮√-d⟯) ↔
+theorem ring_of_int (x : ℚ⟮√[d]⟯) : x ∈ (integralClosure ℤ ℚ⟮√[d]⟯) ↔
   x.1 ∈ Algebra.adjoin ℤ {γ} := by
   constructor
   · intro h -- Assume `x` is an integer
-    by_cases hx : x ∈ (algebraMap ℚ ℚ⟮√-d⟯).range -- Case 1: `x` is rational
+    by_cases hx : x ∈ (algebraMap ℚ ℚ⟮√[d]⟯).range -- Case 1: `x` is rational
     · exact adjoin_mem₁ hx h -- Rational integer is in `ℤ ⊂ ℤ[γ]`
     · -- Case 2: `x` is not rational. Use `x = (a + b√d) / c` representation.
       -- `c ∣ 2 and c ^ 2 ∣ a ^ 2 - (b ^ 2) d`
@@ -1299,7 +1299,7 @@ theorem ring_of_int (x : ℚ⟮√-d⟯) : x ∈ (integralClosure ℤ ℚ⟮√-
   · exact adjoin_of_ring_of_int sqf one hd x -- Converse: elements of ℤ[γ] are integers
 
 /-- The ring of integers `𝓞 ℚ(√d)` is ℤ-algebra isomorphic to `ℤ[γ]` when `d ≡ 1 [ZMOD 4]`. -/
-noncomputable def ring_of_int' : 𝓞 ℚ⟮√-d⟯ ≃ₐ[ℤ] Algebra.adjoin ℤ {γ} where
+noncomputable def ring_of_int' : 𝓞 ℚ⟮√[d]⟯ ≃ₐ[ℤ] Algebra.adjoin ℤ {γ} where
   toFun x := ⟨x, (ring_of_int sqf one hd x).1 x.2⟩ -- Map integer `x` to itself in ℤ[γ]
   invFun y := ⟨⟨y.1, adjoin_mem₆ sqf one hd y⟩, -- Map `y ∈ ℤ[γ]` to `⟨y.1, _⟩` in `𝓞 ℚ(√d)`
     (ring_of_int sqf one hd ⟨y.1, adjoin_mem₆ sqf one hd y⟩).2 y.2⟩ -- Proof it's an integer
@@ -1314,9 +1314,9 @@ noncomputable abbrev intbase :=
   PowerBasis.map zbase (ring_of_int' sqf one hd).symm
 
 /-- The discriminant of `ℚ(√d)` is `d` when `d ≡ 1 [ZMOD 4]`. -/
-theorem final : NumberField.discr ℚ⟮√-d⟯ = d := by
+theorem final : NumberField.discr ℚ⟮√[d]⟯ = d := by
   -- Discriminant is invariant under isomorphism, use the basis for ℤ[γ].
-  rw [← discr_eq_discr ℚ⟮√-d⟯ (intbase sqf one hd).basis, intbase]
+  rw [← discr_eq_discr ℚ⟮√[d]⟯ (intbase sqf one hd).basis, intbase]
   simp only [map_dim, map_basis] -- Properties of `PowerBasis.map`
   have : (basis zbase).map (ring_of_int' sqf one hd).symm.toLinearEquiv =
     (ring_of_int' sqf one hd).symm ∘ (basis zbase) := by -- How map interacts with basis
@@ -1335,8 +1335,8 @@ include sqf in
 - If `d ≡ 1 [ZMOD 4]`, the discriminant is `d`.
 - If `¬ d ≡ 1 [ZMOD 4]`, the discriminant is `4d`. -/
 theorem quadratic_discr :
-    (  d ≡ 1 [ZMOD 4] → NumberField.discr ℚ⟮√-d⟯ = d) ∧
-    (¬ d ≡ 1 [ZMOD 4] → NumberField.discr ℚ⟮√-d⟯ = 4 * d) := by
+    (  d ≡ 1 [ZMOD 4] → NumberField.discr ℚ⟮√[d]⟯ = d) ∧
+    (¬ d ≡ 1 [ZMOD 4] → NumberField.discr ℚ⟮√[d]⟯ = 4 * d) := by
   by_cases one : d ≠ 1 -- The previous proofs assumed `d ≠ 1`.
   · -- Case `d ≠ 1`: Apply results from `Z₁` and `Z₂`.
     exact ⟨Z₂.final sqf one, Z₁.final sqf one⟩
